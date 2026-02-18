@@ -252,10 +252,11 @@ export const deleteSavedList = (id: string) => {
 
 // ============ SEED DATA ============
 
+// ============ SEED DATA ============
+
 export const seedDemoData = () => {
-  // Only seed if no products exist
   if (getProducts().length > 0) return;
-  
+
   const demoOwner: OwnerProfile = {
     id: 'owner1',
     fullName: 'Rajesh Kumar',
@@ -263,36 +264,51 @@ export const seedDemoData = () => {
     email: 'rajesh@example.com',
     password: '1234',
   };
-  
+
   const demoShop: Shop = {
     ownerId: 'owner1',
     shopName: 'Rajesh General Store',
     shopType: 'General Store',
     shopPhoto: '',
-    address: { houseNumber: '42', area: 'MG Road', landmark: 'Near Bus Stand', pinCode: '560001' },
+    address: {
+      houseNumber: '42',
+      area: 'MG Road',
+      landmark: 'Near Bus Stand',
+      pinCode: '560001',
+    },
     gpsLocation: '12.9716, 77.5946',
     openingTime: '07:00',
     closingTime: '21:00',
     weeklyOff: 'Sunday',
   };
-  
+
   const demoProducts: Product[] = [
-    { id: 'p1', shopOwnerId: 'owner1', name: 'Toor Dal (1kg)', price: 140, available: true, category: 'Pulses' },
-    { id: 'p2', shopOwnerId: 'owner1', name: 'Basmati Rice (5kg)', price: 450, available: true, category: 'Rice' },
-    { id: 'p3', shopOwnerId: 'owner1', name: 'Amul Butter (500g)', price: 280, available: true, category: 'Dairy' },
-    { id: 'p4', shopOwnerId: 'owner1', name: 'Sugar (1kg)', price: 48, available: true, category: 'Essentials' },
-    { id: 'p5', shopOwnerId: 'owner1', name: 'Sunflower Oil (1L)', price: 180, available: true, category: 'Oil' },
-    { id: 'p6', shopOwnerId: 'owner1', name: 'Wheat Flour (5kg)', price: 220, available: true, category: 'Flour' },
-    { id: 'p7', shopOwnerId: 'owner1', name: 'Tea Powder (250g)', price: 120, available: false, category: 'Beverages' },
-    { id: 'p8', shopOwnerId: 'owner1', name: 'Milk (1L)', price: 60, available: true, category: 'Dairy' },
-    { id: 'p9', shopOwnerId: 'owner1', name: 'Onion (1kg)', price: 35, available: true, category: 'Vegetables' },
-    { id: 'p10', shopOwnerId: 'owner1', name: 'Maggi Noodles (4 pack)', price: 56, available: true, category: 'Snacks' },
+    { id: 'p1', shopOwnerId: 'owner1', name: 'Dal (1kg)', price: 140, available: true, category: 'Pulses', image: '\images\dal.png' },
+    { id: 'p2', shopOwnerId: 'owner1', name: 'Basmati Rice (5kg)', price: 450, available: true, category: 'Rice', image: '/images/rice.jpg' },
+    { id: 'p3', shopOwnerId: 'owner1', name: 'Amul Butter (500g)', price: 280, available: true, category: 'Dairy', image: '/images/butter.jpg' },
+    { id: 'p4', shopOwnerId: 'owner1', name: 'Sugar (1kg)', price: 48, available: true, category: 'Essentials', image: '/images/sugar.jpg' },
+    { id: 'p5', shopOwnerId: 'owner1', name: 'Sunflower Oil (1L)', price: 180, available: true, category: 'Oil', image: '/images/oil.jpg' },
+    { id: 'p6', shopOwnerId: 'owner1', name: 'Wheat Flour (5kg)', price: 220, available: true, category: 'Flour', image: '/images/atta.jpg' },
+    { id: 'p7', shopOwnerId: 'owner1', name: 'Tea Powder (250g)', price: 120, available: true, category: 'Beverages', image: '/images/tea.jpg' },
+    { id: 'p8', shopOwnerId: 'owner1', name: 'Milk (1L)', price: 60, available: true, category: 'Dairy', image: 'C:\Users\sathw\Downloads\KiranaApp\frontend\public\images\milk.png' },
+    { id: 'p9', shopOwnerId: 'owner1', name: 'Onion (1kg)', price: 35, available: true, category: 'Vegetables', image: '/images/onion.jpg' },
+    { id: 'p10', shopOwnerId: 'owner1', name: 'Maggi Noodles (4 pack)', price: 56, available: true, category: 'Snacks', image: '/images/maggi.jpg' },
+    { id: 'p11', shopOwnerId: 'owner1', name: 'Salt (1kg)', price: 20, available: true, category: 'Essentials', image: '/images/salt.jpg' },
+    { id: 'p12', shopOwnerId: 'owner1', name: 'Biscuits (Pack)', price: 30, available: true, category: 'Snacks', image: '/images/biscuits.jpg' },
+    { id: 'p13', shopOwnerId: 'owner1', name: 'Soap (Pack of 3)', price: 75, available: true, category: 'Personal Care', image: '/images/soap.jpg' },
+    { id: 'p14', shopOwnerId: 'owner1', name: 'Shampoo (200ml)', price: 120, available: true, category: 'Personal Care', image: '/images/shampoo.jpg' },
+    { id: 'p15', shopOwnerId: 'owner1', name: 'Toothpaste (150g)', price: 95, available: true, category: 'Personal Care', image: '/images/toothpaste.jpg' },
+    { id: 'p16', shopOwnerId: 'owner1', name: 'Coffee (200g)', price: 210, available: true, category: 'Beverages', image: '/images/coffee.jpg' },
+    { id: 'p17', shopOwnerId: 'owner1', name: 'Chips (Pack)', price: 20, available: true, category: 'Snacks', image: '/images/chips.jpg' },
+    { id: 'p18', shopOwnerId: 'owner1', name: 'Curd (500g)', price: 40, available: true, category: 'Dairy', image: '/images/curd.jpg' },
+    { id: 'p19', shopOwnerId: 'owner1', name: 'Bread (400g)', price: 45, available: true, category: 'Bakery', image: '/images/bread.jpg' },
+    { id: 'p20', shopOwnerId: 'owner1', name: 'Eggs (12 pcs)', price: 72, available: true, category: 'Poultry', image: '/images/eggs.jpg' },
   ];
-  
+
   saveOwnerProfile(demoOwner);
   saveShop(demoShop);
   saveProducts(demoProducts);
 };
-
 // Initialize seed data on first load
 seedDemoData();
+
