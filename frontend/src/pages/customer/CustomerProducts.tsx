@@ -188,12 +188,10 @@ const CustomerProducts = () => {
               className="bg-white rounded-xl shadow-sm p-3 flex flex-col"
             >
               {/* PRODUCT IMAGE */}
-              <div className="w-full h-40 overflow-hidden rounded-lg mb-3">
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-full h-40 overflow-hidden rounded-lg mb-3 bg-gray-200">
+                <div className="w-full h-full flex items-center justify-center">
+                  <Package className="w-8 h-8 text-gray-400" />
+                </div>
               </div>
 
               <h3 className="text-sm font-medium mb-1">
