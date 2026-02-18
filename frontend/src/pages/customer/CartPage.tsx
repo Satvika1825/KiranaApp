@@ -3,16 +3,56 @@
  * Shows cart items with quantity controls, delivery charge, total price.
  * Proceed to Payment page for checkout.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getCart, saveCart } from '@/lib/store';
+import { getProducts, getCustomerProfile, type CartItem, saveCart } from '@/lib/store';
+import { api } from '@/lib/api';
 import { Plus, Minus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 
 const DELIVERY_CHARGE = 25;
 
 const CartPage = () => {
   const navigate = useNavigate();
-  const [cart, setCart] = useState(getCart());
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const customer = getCustomerProfile();
+  const userId = customer?.id || 'guest';
+  const allProducts = getProducts(); // Need products to map back
+
+  useEffect(() => {
+    // Fetch cart from backend
+    api.cart.get(userId).then(data => {
+      if (data && data.items) {
+        // Map backend items. If product not found in local store, use backend item details.
+        const mapped = data.items.map((item: any) => {
+          const localProduct = allProducts.find(p => p.id === item.productId);
+
+          // Construct a product object even if local lookup fails
+          const product = localProduct || {
+            id: item.productId,
+            name: item.name || 'Unknown Product',
+            price: item.price || 0,
+            shopOwnerId: item.shopOwnerId || '',
+            available: true,
+            category: 'Uncategorized'
+          };
+
+          return { product, quantity: item.quantity };
+        });
+        setCart(mapped);
+      }
+    }).catch(err => console.error('Failed to load cart', err));
+  }, [userId]);
+
+  const updateCartBackend = (newCart: CartItem[]) => {
+    const apiItems = newCart.map(c => ({
+      productId: c.product.id,
+      quantity: c.quantity,
+      name: c.product.name,
+      price: c.product.price,
+      shopOwnerId: c.product.shopOwnerId
+    }));
+    api.cart.update(userId, apiItems).catch(console.error);
+  };
 
   const updateQty = (productId: string, delta: number) => {
     const updated = cart.map(c => {
@@ -22,13 +62,15 @@ const CartPage = () => {
       return c;
     });
     setCart(updated);
-    saveCart(updated);
+    saveCart(updated); // Keep local sync for now, though backend is source of truth
+    updateCartBackend(updated);
   };
 
   const removeItem = (productId: string) => {
     const updated = cart.filter(c => c.product.id !== productId);
     setCart(updated);
     saveCart(updated);
+    updateCartBackend(updated);
   };
 
   const subtotal = cart.reduce((s, c) => s + c.product.price * c.quantity, 0);

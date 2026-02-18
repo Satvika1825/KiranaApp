@@ -9,6 +9,7 @@ import {
   getCart, clearCart, addOrder, addOwnerNotification,
   getCustomerProfile, getOwnerProfile, generateId, getCustomerAddresses,
 } from '@/lib/store';
+import { api } from '@/lib/api';
 import { CreditCard, Banknote, Clock, ArrowRight, MapPin } from 'lucide-react';
 
 const DELIVERY_CHARGE = 25;
@@ -41,6 +42,7 @@ const PaymentPage = () => {
     });
     addOwnerNotification(`New order #${orderId} from ${customer?.name || 'Guest'} — ₹${total}`, orderId);
     clearCart();
+    api.cart.clear(customer?.id || 'guest').catch(console.error);
     navigate(`/customer/order/${orderId}`);
   };
 

@@ -4,9 +4,10 @@
  * Features: search bar, category filter, grid layout with quantity selector and Add to Cart.
  * IMPORTANT: Only display products where availability = ON from owner data.
  */
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProducts, getCart, saveCart, getShop, type CartItem } from '@/lib/store';
+import { getProducts, getShop, type CartItem, getCustomerProfile, saveCart } from '@/lib/store';
+import { api } from '@/lib/api';
 import { ShoppingCart, Plus, Minus, Package, Search, X } from 'lucide-react';
 
 const CustomerProducts = () => {
@@ -14,7 +15,21 @@ const CustomerProducts = () => {
   const shop = getShop();
   // Only show available products (availability toggle = ON)
   const allProducts = getProducts().filter(p => p.available);
-  const [cart, setCart] = useState<CartItem[]>(getCart());
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const customer = getCustomerProfile();
+  const userId = customer?.id || 'guest';
+
+  useEffect(() => {
+    api.cart.get(userId).then(data => {
+      if (data && data.items) {
+        const mapped = data.items.map((item: any) => {
+          const product = allProducts.find(p => p.id === item.productId);
+          return product ? { product, quantity: item.quantity } : null;
+        }).filter(Boolean) as CartItem[];
+        setCart(mapped);
+      }
+    }).catch(err => console.error('Failed to load cart', err));
+  }, [userId]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -42,14 +57,32 @@ const CustomerProducts = () => {
     if (!product) return;
     const existing = cart.find(c => c.product.id === productId);
     let updated: CartItem[];
+    // Calculate new quantity to add (this logic might need adjustment if backend sums it up)
+    // Actually backend sums it up. We just need to send the delta or the new total?
+    // Backend: cart.items[itemIndex].quantity += quantity;
+    // So we should send the QUANTITY TO ADD.
+    const qtyToAdd = getQty(productId);
+
     if (existing) {
       updated = cart.map(c => c.product.id === productId
-        ? { ...c, quantity: c.quantity + getQty(productId) } : c);
+        ? { ...c, quantity: c.quantity + qtyToAdd } : c);
     } else {
-      updated = [...cart, { product, quantity: getQty(productId) }];
+      updated = [...cart, { product, quantity: qtyToAdd }];
     }
     setCart(updated);
-    saveCart(updated);
+    saveCart(updated); // Sync local storage
+
+    // Send only the new item delta to backend
+    api.cart.add(userId, {
+      product: {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        shopOwnerId: product.shopOwnerId
+      },
+      quantity: qtyToAdd
+    }).catch(console.error);
+
     setQuantities({ ...quantities, [productId]: 1 });
   };
 
@@ -87,11 +120,10 @@ const CustomerProducts = () => {
       <div className="flex gap-2 overflow-x-auto pb-3 mb-3 scrollbar-none">
         {categories.map(cat => (
           <button key={cat} onClick={() => setSelectedCategory(cat)}
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${
-              selectedCategory === cat
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-accent text-accent-foreground hover:bg-accent/80'
-            }`}>
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-colors ${selectedCategory === cat
+              ? 'bg-primary text-primary-foreground'
+              : 'bg-accent text-accent-foreground hover:bg-accent/80'
+              }`}>
             {cat}
           </button>
         ))}
