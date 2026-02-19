@@ -1,9 +1,11 @@
 /**
  * Customer Orders History Page
- * Shows all past orders with status and reorder capability.
+ * Fetches orders from backend API with localStorage fallback.
  */
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getOrders, getCustomerProfile, getShop, getCart, saveCart, getProducts } from '@/lib/store';
+import { getOrders, getCustomerProfile, getShop, getCart, saveCart, getProducts, saveOrders } from '@/lib/store';
+import { api } from '@/lib/api';
 import { Package, RefreshCw, ChevronRight } from 'lucide-react';
 import type { CartItem } from '@/lib/store';
 
@@ -11,7 +13,24 @@ const CustomerOrders = () => {
   const navigate = useNavigate();
   const customer = getCustomerProfile();
   const shop = getShop();
-  const orders = getOrders().filter(o => o.customerId === (customer?.id || 'guest'));
+  const customerId = customer?.id || 'guest';
+
+  const [orders, setOrders] = useState(getOrders().filter(o => o.customerId === customerId));
+
+  // Fetch orders from backend
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const data = await api.orders.getByCustomer(customerId);
+        if (data.orders && data.orders.length > 0) {
+          setOrders(data.orders);
+        }
+      } catch {
+        // Use localStorage orders
+      }
+    };
+    fetchOrders();
+  }, [customerId]);
 
   const statusClass: Record<string, string> = {
     'New': 'kc-status-new',
@@ -26,7 +45,6 @@ const CustomerOrders = () => {
     const currentProducts = getProducts();
     const cart = getCart();
     orderItems.forEach(item => {
-      // Only add if product still exists and is available
       const prod = currentProducts.find(p => p.id === item.product.id && p.available);
       if (!prod) return;
       const existing = cart.find(c => c.product.id === prod.id);

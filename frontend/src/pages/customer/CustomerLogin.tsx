@@ -1,11 +1,13 @@
 /**
  * Customer Login Page
- * Simulates OTP-based login with mobile number.
+ * OTP-based login with mobile number — connected to backend API.
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { saveCustomerProfile, generateId } from '@/lib/store';
+import { api } from '@/lib/api';
+import { syncService } from '@/lib/sync';
 
 const CustomerLogin = () => {
   const navigate = useNavigate();
@@ -13,16 +15,35 @@ const CustomerLogin = () => {
   const [mobile, setMobile] = useState('');
   const [name, setName] = useState('');
   const [otp, setOtp] = useState('');
+  const [serverOtp, setServerOtp] = useState('');
 
-  const handleSendOtp = (e: React.FormEvent) => {
+  const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!mobile || !name) return;
-    setStep('otp');
+    try {
+      const data = await api.auth.sendOtp(mobile);
+      if (data.otp) setServerOtp(data.otp); // Dev mode: auto-fill OTP
+      setStep('otp');
+    } catch {
+      // Fallback: proceed without backend
+      setStep('otp');
+    }
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (otp.length < 4) return;
-    saveCustomerProfile({ id: generateId(), mobile, name });
+    try {
+      const data = await api.auth.verifyOtp(mobile, serverOtp || otp, name);
+      const userId = data.user?._id || data.user?.id || generateId();
+      saveCustomerProfile({ id: userId, mobile, name, email: data.user?.email || '' });
+      // Also save profile to backend
+      await api.customer.saveProfile({ userId, mobile, name });
+      // Trigger full sync
+      await syncService.syncCustomerData();
+    } catch {
+      // Fallback: save to localStorage
+      saveCustomerProfile({ id: generateId(), mobile, name });
+    }
     setStep('verified');
     setTimeout(() => navigate('/customer/home'), 1000);
   };
@@ -65,7 +86,7 @@ const CustomerLogin = () => {
               <input type="text" value={otp} onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
                 className="w-full px-3 py-3 rounded-lg border bg-background text-foreground text-center text-2xl tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-ring"
                 placeholder="• • • •" maxLength={4} />
-              <p className="text-xs text-muted-foreground">Hint: Enter any 4 digits</p>
+              {serverOtp && <p className="text-xs text-muted-foreground">Dev OTP: {serverOtp}</p>}
               <button onClick={handleVerify} className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity">
                 Verify OTP
               </button>

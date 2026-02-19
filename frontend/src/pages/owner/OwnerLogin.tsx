@@ -1,12 +1,9 @@
-/**
- * Owner Registration + Login Page
- * Simulates OTP verification UI.
- * Saves owner profile to localStorage.
- */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Store, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { saveOwnerProfile, getOwnerProfile, generateId } from '@/lib/store';
+import { api } from '@/lib/api';
+import { syncService } from '@/lib/sync';
 
 const OwnerLogin = () => {
   const navigate = useNavigate();
@@ -16,37 +13,109 @@ const OwnerLogin = () => {
   const [step, setStep] = useState<'form' | 'otp' | 'verified'>('form');
   const [form, setForm] = useState({ fullName: '', mobile: '', email: '', password: '' });
   const [otp, setOtp] = useState('');
+  const [serverOtp, setServerOtp] = useState('');
   const [loginMobile, setLoginMobile] = useState('');
+  const [error, setError] = useState('');
 
-  const handleRegister = (e: React.FormEvent) => {
+  // Step 1: Send OTP for registration
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (!form.fullName || !form.mobile) return;
-    setStep('otp');
+    try {
+      const data = await api.auth.sendOtp(form.mobile);
+      if (data.otp) setServerOtp(data.otp);
+      setStep('otp');
+    } catch (err) {
+      setError('Failed to send OTP. Please try again.');
+      console.error(err);
+    }
   };
 
-  const handleVerifyOtp = () => {
-    if (otp.length < 4) return;
-    setStep('verified');
-    setTimeout(() => {
-      if (mode === 'register') {
-        saveOwnerProfile({ id: generateId(), ...form });
-        navigate('/owner/shop-setup');
-      } else {
-        navigate('/owner/dashboard');
-      }
-    }, 1000);
-  };
-
-  const handleLogin = (e: React.FormEvent) => {
+  // Step 1: Send OTP for login
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
     if (!loginMobile) return;
-    setStep('otp');
+    try {
+      const data = await api.auth.sendOtp(loginMobile);
+      if (data.otp) setServerOtp(data.otp);
+      setStep('otp');
+    } catch (err) {
+      setError('Failed to send OTP. Please try again.');
+      console.error(err);
+    }
+  };
+
+  // Step 2: Verify OTP then register/login
+  const handleVerifyOtp = async () => {
+    if (otp.length < 4) return;
+    setError('');
+
+    try {
+      let newOwnerId = '';
+
+      if (mode === 'register') {
+        const mobile = form.mobile.replace(/\D/g, '');
+        const data = await api.auth.verifyOtp(mobile, otp, form.fullName, form.email, 'kirana_owner');
+        if (data.token) localStorage.setItem('token', data.token);
+        newOwnerId = data.user?.id || generateId();
+
+        // ✅ Clear stale shop/products if a different owner was stored before
+        if (existing && existing.id !== newOwnerId) {
+          localStorage.removeItem('kc_shop');
+          localStorage.removeItem('kc_products');
+          localStorage.removeItem('kc_orders');
+          localStorage.removeItem('kc_owner_notifs');
+        }
+
+        saveOwnerProfile({
+          id: newOwnerId,
+          fullName: data.user?.name || form.fullName,
+          mobile,
+          email: data.user?.email || form.email,
+          password: ''
+        });
+
+      } else {
+        const mobile = loginMobile.replace(/\D/g, '');
+        const data = await api.auth.verifyOtp(mobile, otp, undefined, undefined, 'kirana_owner');
+        if (data.token) localStorage.setItem('token', data.token);
+        newOwnerId = data.user?.id || generateId();
+
+        // ✅ Clear stale shop/products if a different owner was stored before
+        if (existing && existing.id !== newOwnerId) {
+          localStorage.removeItem('kc_shop');
+          localStorage.removeItem('kc_products');
+          localStorage.removeItem('kc_orders');
+          localStorage.removeItem('kc_owner_notifs');
+        }
+
+        saveOwnerProfile({
+          id: newOwnerId,
+          fullName: data.user?.name || '',
+          mobile,
+          email: data.user?.email || '',
+          password: ''
+        });
+      }
+
+      await syncService.syncOwnerData();
+
+      setStep('verified');
+      setTimeout(() => {
+        navigate(mode === 'register' ? '/owner/shop-setup' : '/owner/dashboard');
+      }, 1000);
+
+    } catch (err: any) {
+      console.error('Verification failed:', err);
+      setError(err.message || 'Verification failed. Please try again.');
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
       <div className="w-full max-w-md animate-fade-in">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-3">
             <Store className="w-7 h-7 text-primary" />
@@ -60,6 +129,13 @@ const OwnerLogin = () => {
         </div>
 
         <div className="kc-card-flat p-6">
+          {/* ✅ Error display */}
+          {error && (
+            <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm text-center">
+              {error}
+            </div>
+          )}
+
           {step === 'form' && mode === 'register' && (
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
@@ -78,7 +154,7 @@ const OwnerLogin = () => {
                 <input
                   type="tel"
                   value={form.mobile}
-                  onChange={e => setForm({ ...form, mobile: e.target.value })}
+                  onChange={e => setForm({ ...form, mobile: e.target.value.replace(/\D/g, '') })}
                   className="w-full px-3 py-2.5 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="9876543210"
                   maxLength={10}
@@ -119,7 +195,7 @@ const OwnerLogin = () => {
                 <input
                   type="tel"
                   value={loginMobile}
-                  onChange={e => setLoginMobile(e.target.value)}
+                  onChange={e => setLoginMobile(e.target.value.replace(/\D/g, ''))}
                   className="w-full px-3 py-2.5 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                   placeholder="9876543210"
                   maxLength={10}
@@ -132,10 +208,11 @@ const OwnerLogin = () => {
             </form>
           )}
 
-          {/* OTP Verification Step */}
           {step === 'otp' && (
             <div className="space-y-4 text-center">
-              <p className="text-sm text-muted-foreground">Enter the OTP sent to your mobile</p>
+              <p className="text-sm text-muted-foreground">
+                Enter the OTP sent to <strong>{mode === 'register' ? form.mobile : loginMobile}</strong>
+              </p>
               <input
                 type="text"
                 value={otp}
@@ -144,14 +221,25 @@ const OwnerLogin = () => {
                 placeholder="• • • •"
                 maxLength={4}
               />
-              <p className="text-xs text-muted-foreground">Hint: Enter any 4 digits</p>
-              <button onClick={handleVerifyOtp} className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+              {serverOtp && (
+                <p className="text-xs text-muted-foreground font-semibold">Dev OTP: {serverOtp}</p>
+              )}
+              <button
+                onClick={handleVerifyOtp}
+                disabled={otp.length < 4}
+                className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
                 Verify OTP
+              </button>
+              <button
+                onClick={() => { setStep('form'); setOtp(''); setError(''); }}
+                className="text-sm text-muted-foreground underline"
+              >
+                Go back
               </button>
             </div>
           )}
 
-          {/* Verified */}
           {step === 'verified' && (
             <div className="text-center py-4 space-y-2">
               <CheckCircle2 className="w-12 h-12 text-primary mx-auto" />
@@ -161,12 +249,15 @@ const OwnerLogin = () => {
           )}
         </div>
 
-        {/* Toggle mode */}
         <p className="text-center text-sm text-muted-foreground mt-4">
           {mode === 'register' ? (
-            <>Already have an account? <button onClick={() => { setMode('login'); setStep('form'); }} className="text-primary font-semibold">Login</button></>
+            <>Already have an account?{' '}
+              <button onClick={() => { setMode('login'); setStep('form'); setError(''); }} className="text-primary font-semibold">Login</button>
+            </>
           ) : (
-            <>New here? <button onClick={() => { setMode('register'); setStep('form'); }} className="text-primary font-semibold">Register</button></>
+            <>New here?{' '}
+              <button onClick={() => { setMode('register'); setStep('form'); setError(''); }} className="text-primary font-semibold">Register</button>
+            </>
           )}
         </p>
       </div>

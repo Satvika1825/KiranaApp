@@ -1,13 +1,15 @@
 /**
  * Owner Orders Page
- * 
+ * Fetches orders from backend API. Status changes sync to backend.
+ *
  * ORDER STATUS UPDATES:
  * - Owner changes status via dropdown
- * - Status change triggers customer notification
+ * - Status change triggers customer notification & backend update
  * - Status options: New → Accepted → Preparing → Out for Delivery → Delivered
  */
-import { useState } from 'react';
-import { getOrders, updateOrderStatus, addCustomerNotification, type Order } from '@/lib/store';
+import { useState, useEffect } from 'react';
+import { getOrders, updateOrderStatus, addCustomerNotification, getOwnerProfile, type Order } from '@/lib/store';
+import { api } from '@/lib/api';
 import { ClipboardList } from 'lucide-react';
 
 const statuses: Order['status'][] = ['New', 'Accepted', 'Preparing', 'Out for Delivery', 'Delivered'];
@@ -24,13 +26,42 @@ const statusClass = (s: string) => {
 };
 
 const OwnerOrders = () => {
+  const owner = getOwnerProfile();
   const [orders, setOrders] = useState(getOrders());
 
-  const handleStatusChange = (orderId: string, newStatus: Order['status']) => {
+  // Fetch orders from backend
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const data = await api.orders.getByOwner(owner?.id || 'owner1');
+        if (data.orders && data.orders.length > 0) {
+          setOrders(data.orders);
+        }
+      } catch {
+        setOrders(getOrders());
+      }
+    };
+    fetchOrders();
+
+    // Poll for new orders
+    const interval = setInterval(fetchOrders, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
+    // Update localStorage
     updateOrderStatus(orderId, newStatus);
-    // Notify customer about status change
     addCustomerNotification(`Order #${orderId} is now: ${newStatus}`, orderId);
-    setOrders(getOrders());
+
+    // Update backend
+    try {
+      await api.orders.updateStatus(orderId, newStatus);
+    } catch {
+      console.log('Backend status update failed');
+    }
+
+    // Update local state
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
   };
 
   return (
@@ -57,7 +88,7 @@ const OwnerOrders = () => {
 
               {/* Items */}
               <div className="bg-muted/50 rounded-lg p-2.5">
-                {order.items.map((item, i) => (
+                {order.items.map((item: any, i: number) => (
                   <div key={i} className="flex justify-between text-sm py-0.5">
                     <span className="text-foreground">{item.product.name} × {item.quantity}</span>
                     <span className="text-muted-foreground">₹{item.product.price * item.quantity}</span>

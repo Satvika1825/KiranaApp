@@ -2,62 +2,215 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/user');
 const Customer = require('../models/customer');
+const jwt = require('jsonwebtoken');
 
-// In-memory OTP store (use Redis in production)
 const otpStore = {};
 
+const generateToken = (user) => {
+  if (!process.env.JWT_SECRET) throw new Error('JWT_SECRET is not defined');
+  return jwt.sign(
+    { userId: user._id.toString(), role: user.role, mobile: user.mobile },
+    process.env.JWT_SECRET,
+    { expiresIn: '30d' }
+  );
+};
+
 // POST /api/auth/send-otp
-// Step 1: Customer enters mobile number
 router.post('/send-otp', async (req, res) => {
   try {
-    const { mobile } = req.body;
+    let { mobile } = req.body;
     if (!mobile) return res.status(400).json({ error: 'Mobile number required' });
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    otpStore[mobile] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 }; // 5 min expiry
+    mobile = mobile.replace(/\D/g, ''); // ✅ sanitize before storing
+    if (mobile.length < 10 || mobile.length > 15) {
+      return res.status(400).json({ error: 'Invalid mobile number' });
+    }
 
-    // TODO: Send OTP via SMS (Twilio/MSG91/etc.)
-    console.log(`OTP for ${mobile}: ${otp}`); // Remove in production
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+    otpStore[mobile] = { otp, expiresAt: Date.now() + 5 * 60 * 1000 };
 
-    res.json({ message: 'OTP sent successfully' });
+    console.log(`OTP for ${mobile}: ${otp}`);
+    res.json({ message: 'OTP sent successfully', otp });
   } catch (err) {
+    console.error('Send OTP Error:', err);
     res.status(500).json({ error: err.message });
   }
 });
 
 // POST /api/auth/verify-otp
-// Step 1: Verify OTP and login/register
 router.post('/verify-otp', async (req, res) => {
   try {
-    const { mobile, otp, name, email } = req.body;
+    let { mobile, otp, name, email, role } = req.body;
+    if (!mobile) return res.status(400).json({ error: 'Mobile number required' });
+    if (!otp) return res.status(400).json({ error: 'OTP required' });
+
+    mobile = mobile.replace(/\D/g, '');
+    
+    // Validate mobile after sanitization
+    if (mobile.length < 10 || mobile.length > 15) {
+      return res.status(400).json({ error: 'Invalid mobile format' });
+    }
+
+    console.log('verify-otp → mobile:', mobile, '| otp:', otp, '| role:', role);
 
     const record = otpStore[mobile];
+    console.log('OTP record found:', record);
+
     if (!record) return res.status(400).json({ error: 'OTP not sent or expired' });
     if (record.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
     if (Date.now() > record.expiresAt) return res.status(400).json({ error: 'OTP expired' });
 
     delete otpStore[mobile];
 
-    // Find or create user
+    // Find or create User
     let user = await User.findOne({ mobile });
+    console.log('Existing user found:', user ? user._id : 'none');
+
     if (!user) {
-      user = await User.create({ mobile, name, email, role: 'customer' });
-      await Customer.create({ userId: user._id, mobile });
+      user = await User.create({
+        mobile,
+        name: name || '',
+        email: email || '',
+        role: role || 'customer',
+        isActive: true
+      });
+      console.log('New user created:', user._id);
     } else {
-      // Update optional fields if provided
       if (name) user.name = name;
       if (email) user.email = email;
+      if (role && role !== user.role) user.role = role;
+      user.isActive = true;
+      await user.save();
+      console.log('User updated:', user._id);
+    }
+
+    // Find or create Customer (only for customer role)
+    if (user.role === 'customer') {
+      try {
+        let customer = await Customer.findOne({ userId: user._id.toString() });
+        if (!customer) {
+          customer = await Customer.create({
+            userId: user._id.toString(),
+            mobile: user.mobile,
+            name: user.name || '',
+            email: user.email || ''
+          });
+          console.log('New customer created:', customer._id);
+        }
+      } catch (customerErr) {
+        console.error('Customer creation error:', customerErr.message);
+        // Don't fail the verify-otp request due to Customer creation issues
+      }
+    }
+
+    const token = generateToken(user);
+    res.json({
+      message: 'OTP verified successfully',
+      token,
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        mobile: user.mobile,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Verify OTP Error:', err);
+    console.error('Error stack:', err.stack);
+    res.status(500).json({ 
+      error: err.message || 'Verification failed',
+      details: err.toString()
+    });
+  }
+});
+
+// POST /api/auth/register-owner
+router.post('/register-owner', async (req, res) => {
+  try {
+    let { fullName, mobile, email, password } = req.body;
+    console.log('register-owner body:', req.body);
+
+    if (!mobile || !fullName) {
+      return res.status(400).json({ error: 'Name and mobile required' });
+    }
+
+    mobile = mobile.replace(/\D/g, '');
+    if (mobile.length < 10 || mobile.length > 15) {
+      return res.status(400).json({ error: 'Invalid mobile number' });
+    }
+
+    let user = await User.findOne({ mobile });
+    if (!user) {
+      user = await User.create({
+        mobile,
+        name: fullName,
+        email: email || '',
+        password: password || '',
+        role: 'kirana_owner'
+      });
+    } else {
+      user.name = fullName;
+      user.email = email || user.email;
+      user.password = password || user.password;
+      user.role = 'kirana_owner';
       await user.save();
     }
 
-    // Generate token (JWT)
-    const jwt = require('jsonwebtoken');
-    const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
-      expiresIn: '30d',
+    const token = generateToken(user);
+    res.status(201).json({
+      message: 'Owner registered successfully',
+      token,
+      user: {
+        id: user._id.toString(),
+        fullName: user.name,
+        mobile: user.mobile,
+        email: user.email,
+        role: user.role
+      }
     });
-
-    res.json({ message: 'Login successful', token, user });
   } catch (err) {
+    console.error('Register Owner Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/auth/login-owner
+router.post('/login-owner', async (req, res) => {
+  try {
+    let { mobile, fullName, email } = req.body;
+    if (!mobile) return res.status(400).json({ error: 'Mobile number required' });
+
+    mobile = mobile.replace(/\D/g, '');
+    if (mobile.length < 10 || mobile.length > 15) {
+      return res.status(400).json({ error: 'Invalid mobile number' });
+    }
+
+    let user = await User.findOne({ mobile, role: 'kirana_owner' });
+    if (!user) {
+      user = await User.create({
+        mobile,
+        name: fullName || '',
+        email: email || '',
+        role: 'kirana_owner'
+      });
+      console.log('New kirana owner created:', user._id);
+    }
+
+    const token = generateToken(user);
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id.toString(),
+        fullName: user.name,
+        mobile: user.mobile,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Login Owner Error:', err);
     res.status(500).json({ error: err.message });
   }
 });

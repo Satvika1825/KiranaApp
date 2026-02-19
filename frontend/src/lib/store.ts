@@ -56,6 +56,7 @@ export interface Product {
   price: number;
   available: boolean;
   category: string;
+  image?: string;
 }
 
 export interface CartItem {
@@ -309,6 +310,6 @@ export const seedDemoData = () => {
   saveShop(demoShop);
   saveProducts(demoProducts);
 };
-// Initialize seed data on first load
-seedDemoData();
+// Seed data is intentionally NOT auto-run here.
+// Call seedDemoData() manually only for testing/demo purposes.
 

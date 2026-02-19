@@ -1,7 +1,6 @@
 /**
  * Payment Page — Customer
- * Choose payment method, add special instructions, and place order.
- * Creates order in localStorage and notifies the owner.
+ * Place order via backend API. Also saves to localStorage for offline fallback.
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -10,6 +9,7 @@ import {
   getCustomerProfile, getOwnerProfile, generateId, getCustomerAddresses,
 } from '@/lib/store';
 import { api } from '@/lib/api';
+import { syncService } from '@/lib/sync';
 import { CreditCard, Banknote, Clock, ArrowRight, MapPin } from 'lucide-react';
 
 const DELIVERY_CHARGE = 25;
@@ -27,22 +27,38 @@ const PaymentPage = () => {
   const subtotal = cart.reduce((s, c) => s + c.product.price * c.quantity, 0);
   const total = subtotal + DELIVERY_CHARGE;
 
-  const placeOrder = () => {
+  const placeOrder = async () => {
     if (cart.length === 0) return;
     const orderId = generateId();
-    addOrder({
+    const orderData = {
       id: orderId,
       customerId: customer?.id || 'guest',
       customerName: customer?.name || 'Guest Customer',
       shopOwnerId: owner?.id || 'owner1',
       items: cart,
       totalPrice: total,
-      status: 'New',
+      status: 'New' as const,
+      paymentMethod: payMethod,
+      specialInstructions: instructions,
+      addressId: selectedAddr,
       createdAt: new Date().toISOString(),
-    });
+    };
+
+    // Save to localStorage
+    addOrder(orderData);
     addOwnerNotification(`New order #${orderId} from ${customer?.name || 'Guest'} — ₹${total}`, orderId);
     clearCart();
-    api.cart.clear(customer?.id || 'guest').catch(console.error);
+
+    // Save to backend
+    try {
+      await api.orders.place(orderData);
+      api.cart.clear(customer?.id || 'guest').catch(() => { });
+      // Sync cart state (cleared) to cloud
+      syncService.syncCustomerData();
+    } catch {
+      console.log('Backend order save failed, using localStorage');
+    }
+
     navigate(`/customer/order/${orderId}`);
   };
 

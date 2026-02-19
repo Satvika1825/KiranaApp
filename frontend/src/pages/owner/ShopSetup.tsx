@@ -1,12 +1,13 @@
 /**
  * Shop Setup Page
- * Owner fills in shop details after registration.
- * Data saved to localStorage.
+ * Owner fills in shop details — saves to both localStorage and backend.
  */
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Store, MapPin, Clock, Camera } from 'lucide-react';
 import { saveShop, getOwnerProfile, getShop } from '@/lib/store';
+import { api } from '@/lib/api';
+import { syncService } from '@/lib/sync';
 
 const ShopSetup = () => {
   const navigate = useNavigate();
@@ -43,15 +44,14 @@ const ShopSetup = () => {
   };
 
   const handleDetectGPS = () => {
-    // Simulate GPS detection
     setForm({ ...form, gpsLocation: '12.9716° N, 77.5946° E' });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.shopName || !form.area) return;
 
-    saveShop({
+    const shopData = {
       ownerId: owner?.id || 'owner1',
       shopName: form.shopName,
       shopType: form.shopType,
@@ -66,7 +66,19 @@ const ShopSetup = () => {
       openingTime: form.openingTime,
       closingTime: form.closingTime,
       weeklyOff: form.weeklyOff,
-    });
+    };
+
+    // Save to localStorage
+    saveShop(shopData);
+
+    // Save to backend
+    try {
+      await api.stores.create(shopData);
+      console.log('Store synced to backend');
+    } catch {
+      console.log('Backend save failed, scheduling sync');
+      syncService.syncOwnerData();
+    }
 
     navigate('/owner/dashboard');
   };

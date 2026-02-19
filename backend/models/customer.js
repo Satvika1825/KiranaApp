@@ -1,39 +1,35 @@
 const mongoose = require('mongoose');
 
 const addressSchema = new mongoose.Schema({
+  houseNumber: String,
+  street: String,
+  landmark: String,
+  pinCode: String,
+  gpsLocation: String,
   label: {
     type: String,
+    enum: ['Home', 'Office', 'Other'],
     default: 'Home'
-  },
-  flat: String,
-  building: String,
-  street: String,
-  city: String,
-  pincode: String,
-  landmark: String,
-  latitude: Number,
-  longitude: Number,
-  isDefault: {
-    type: Boolean,
-    default: false
   }
 });
 
 const customerSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+  userId: {
+    type: String,
     required: true
+  },
+  mobile: {
+    type: String,
+    default: ''
   },
   name: {
     type: String,
-    required: [true, 'Name is required']
+    default: ''
   },
   email: {
     type: String,
-    match: [/^\S+@\S+\.\S+$/, 'Please enter valid email']
+    default: ''
   },
-  photoUrl: String,
   addresses: [addressSchema],
   loyaltyPoints: {
     type: Number,

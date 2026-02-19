@@ -1,20 +1,23 @@
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
-  phone: {
+  mobile: {
     type: String,
-    required: [true, 'Phone number is required'],
+    required: [true, 'Mobile number is required'],
     unique: true,
-    match: [/^[0-9]{10}$/, 'Please enter valid 10-digit phone number']
+    match: [/^[0-9]{10,15}$/, 'Please enter valid 10-15 digit phone number']
   },
-  otp: {
+  name: {
     type: String,
-    default: null
+    default: ''
   },
-  otpExpiry: {
-    type: Date,
-    default: null
+  email: {
+    type: String,
+    default: ''
+  },
+  password: {
+    type: String,
+    default: ''
   },
   role: {
     type: String,
@@ -26,23 +29,7 @@ const userSchema = new mongoose.Schema({
     default: true
   }
 }, {
-  timestamps: true  // Automatically adds createdAt and updatedAt
+  timestamps: true
 });
-
-// Hash OTP before saving
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('otp')) {
-    next();
-  }
-  if (this.otp) {
-    const salt = await bcrypt.genSalt(10);
-    this.otp = await bcrypt.hash(this.otp, salt);
-  }
-});
-
-// Compare OTP
-userSchema.methods.compareOTP = async function(enteredOTP) {
-  return await bcrypt.compare(enteredOTP, this.otp);
-};
 
 module.exports = mongoose.model('User', userSchema);

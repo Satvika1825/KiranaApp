@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const cartItemSchema = new mongoose.Schema({
     productId: {
-        type: String, // Keeping as String to match frontend ID generation for now, ideally ObjectId if products are in DB
+        type: String,
         required: true
     },
     quantity: {
@@ -16,12 +16,10 @@ const cartItemSchema = new mongoose.Schema({
 });
 
 const cartSchema = new mongoose.Schema({
-    // In a real app, this would be linked to a User ID. 
-    // For now, we'll assume a single user or pass a deviceId/userId.
     userId: {
         type: String,
         required: true,
-        default: 'guest' // Default for now
+        default: 'guest'
     },
     items: [cartItemSchema],
     updatedAt: {
