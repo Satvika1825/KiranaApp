@@ -1,17 +1,34 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { saveOwnerProfile, getOwnerProfile, generateId } from '@/lib/store';
-import { api } from '@/lib/api';
-import { syncService } from '@/lib/sync';
+import { Store, CheckCircle2 } from 'lucide-react';
+import {
+  saveOwnerProfile,
+  getOwnerProfile,
+  generateId
+} from '@/lib/store';
 
 const OwnerLogin = () => {
   const navigate = useNavigate();
   const existing = getOwnerProfile();
 
-  const [mode, setMode] = useState<'login' | 'register'>(existing ? 'login' : 'register');
+  const [mode, setMode] = useState<'login' | 'register'>(
+    existing ? 'login' : 'register'
+  );
+
   const [step, setStep] = useState<'form' | 'otp' | 'verified'>('form');
-  const [form, setForm] = useState({ fullName: '', mobile: '', email: '', password: '' });
+
+  const [form, setForm] = useState({
+    fullName: '',
+    mobile: '',
+    email: '',
+    password: '',
+  });
+
+  const [loginData, setLoginData] = useState({
+    email: '',
+    password: '',
+  });
+
   const [otp, setOtp] = useState('');
   const [serverOtp, setServerOtp] = useState('');
 
@@ -20,23 +37,46 @@ const OwnerLogin = () => {
   const [loginPassword, setLoginPassword] = useState('');
   const [error, setError] = useState('');
 
-  // Step 1: Send OTP for registration
-  const handleRegister = async (e: React.FormEvent) => {
+  // ================= REGISTER =================
+
+  const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    if (!form.fullName || !form.mobile) return;
-    try {
-      const data = await api.auth.sendOtp(form.mobile);
-      if (data.otp) setServerOtp(data.otp);
-      setStep('otp');
-    } catch (err) {
-      setError('Failed to send OTP. Please try again.');
-      console.error(err);
+
+    if (!form.fullName || !form.mobile || !form.email || !form.password) {
+      setError('Please fill all required fields');
+      return;
     }
+
+    setError('');
+    setStep('otp');
   };
 
-  // Login with mobile + password directly (no OTP)
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleVerifyOtp = () => {
+    if (otp.length < 4) {
+      setError('Enter valid 4 digit OTP');
+      return;
+    }
+
+    setStep('verified');
+
+    setTimeout(() => {
+      saveOwnerProfile({
+        id: generateId(),
+        ...form,
+      });
+
+      localStorage.setItem(
+        'kc_session',
+        JSON.stringify({ role: 'owner', email: form.email })
+      );
+
+      navigate('/owner/shop-setup');
+    }, 1000);
+  };
+
+  // ================= LOGIN =================
+
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     if (!loginMobile || !loginPassword) return;
@@ -109,18 +149,14 @@ const OwnerLogin = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-background">
-      <div className="w-full max-w-md animate-fade-in">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-3">
-            <Store className="w-7 h-7 text-primary" />
-          </div>
-          <h1 className="text-2xl font-heading font-bold text-foreground">
-            {mode === 'register' ? 'Register Your Store' : 'Owner Login'}
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="text-center mb-6">
+          <Store className="w-10 h-10 mx-auto text-primary mb-2" />
+          <h1 className="text-2xl font-bold">
+            {mode === 'register' ? 'Register Store' : 'Owner Login'}
           </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            {mode === 'register' ? 'Set up your kirana store account' : 'Welcome back!'}
-          </p>
         </div>
 
         <div className="kc-card-flat p-6">
@@ -134,138 +170,160 @@ const OwnerLogin = () => {
           {/* ---- REGISTER: Step 1 — Fill form ---- */}
           {step === 'form' && mode === 'register' && (
             <form onSubmit={handleRegister} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">Full Name *</label>
-                <input
-                  type="text"
-                  value={form.fullName}
-                  onChange={e => setForm({ ...form, fullName: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Rajesh Kumar"
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">Mobile Number *</label>
-                <input
-                  type="tel"
-                  value={form.mobile}
-                  onChange={e => setForm({ ...form, mobile: e.target.value.replace(/\D/g, '') })}
-                  className="w-full px-3 py-2.5 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="9876543210"
-                  maxLength={10}
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">Email (optional)</label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={e => setForm({ ...form, email: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="email@example.com"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">PIN / Password</label>
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={e => setForm({ ...form, password: e.target.value })}
-                  className="w-full px-3 py-2.5 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter 4-digit PIN"
-                  maxLength={10}
-                />
-              </div>
-              <button type="submit" className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-                Continue <ArrowRight className="w-4 h-4" />
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+
+              <input
+                type="text"
+                placeholder="Full Name"
+                value={form.fullName}
+                onChange={e =>
+                  setForm({ ...form, fullName: e.target.value })
+                }
+                className="w-full border px-3 py-2 rounded-lg"
+              />
+
+              <input
+                type="tel"
+                placeholder="Mobile"
+                value={form.mobile}
+                onChange={e =>
+                  setForm({ ...form, mobile: e.target.value })
+                }
+                className="w-full border px-3 py-2 rounded-lg"
+              />
+
+              {/* ✅ ADDED EMAIL FIELD */}
+              <input
+                type="email"
+                placeholder="Email"
+                value={form.email}
+                onChange={e =>
+                  setForm({ ...form, email: e.target.value })
+                }
+                className="w-full border px-3 py-2 rounded-lg"
+              />
+
+              <input
+                type="password"
+                placeholder="Password"
+                value={form.password}
+                onChange={e =>
+                  setForm({ ...form, password: e.target.value })
+                }
+                className="w-full border px-3 py-2 rounded-lg"
+              />
+
+              <button
+                type="submit"
+                className="w-full bg-primary text-white py-2 rounded-lg"
+              >
+                Continue
               </button>
             </form>
           )}
 
+          {/* LOGIN FORM */}
           {/* ---- LOGIN: Mobile + Password (no OTP) ---- */}
           {step === 'form' && mode === 'login' && (
             <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">Mobile Number</label>
-                <input
-                  type="tel"
-                  value={loginMobile}
-                  onChange={e => setLoginMobile(e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-3 py-2.5 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="9876543210"
-                  maxLength={10}
-                  required
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1 block">Password / PIN</label>
-                <input
-                  type="password"
-                  value={loginPassword}
-                  onChange={e => setLoginPassword(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  placeholder="Enter your password"
-                  required
-                />
-              </div>
-              <button type="submit" className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-                Login <ArrowRight className="w-4 h-4" />
+              {error && <p className="text-red-500 text-sm">{error}</p>}
+
+              {/* ✅ LOGIN WITH EMAIL */}
+              <input
+                type="email"
+                placeholder="Email"
+                value={loginData.email}
+                onChange={e =>
+                  setLoginData({ ...loginData, email: e.target.value })
+                }
+                className="w-full border px-3 py-2 rounded-lg"
+              />
+
+              <input
+                type="password"
+                placeholder="Password"
+                value={loginData.password}
+                onChange={e =>
+                  setLoginData({ ...loginData, password: e.target.value })
+                }
+                className="w-full border px-3 py-2 rounded-lg"
+              />
+
+              <button
+                type="submit"
+                className="w-full bg-primary text-white py-2 rounded-lg"
+              >
+                Login
               </button>
             </form>
           )}
 
           {/* ---- OTP STEP (register only) ---- */}
+          {/* OTP */}
           {step === 'otp' && (
             <div className="space-y-4 text-center">
               <p className="text-sm text-muted-foreground">
                 Enter the OTP sent to <strong>{form.mobile}</strong>
               </p>
+              <p>Enter any 4-digit OTP</p>
+
               <input
                 type="text"
-                value={otp}
-                onChange={e => setOtp(e.target.value.replace(/\D/g, ''))}
-                className="w-full px-3 py-3 rounded-lg border bg-background text-foreground text-center text-2xl tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-ring"
-                placeholder="• • • •"
                 maxLength={4}
+                value={otp}
+                onChange={e =>
+                  setOtp(e.target.value.replace(/\D/g, ''))
+                }
+                className="w-full border px-3 py-3 text-center text-xl rounded-lg"
               />
-              {serverOtp && (
-                <p className="text-xs text-muted-foreground font-semibold">Dev OTP: {serverOtp}</p>
-              )}
+
               <button
                 onClick={handleVerifyOtp}
-                disabled={otp.length < 4}
-                className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="w-full bg-primary text-white py-2 rounded-lg"
               >
-                Verify OTP
-              </button>
-              <button
-                onClick={() => { setStep('form'); setOtp(''); setError(''); }}
-                className="text-sm text-muted-foreground underline"
-              >
-                Go back
+                Verify
               </button>
             </div>
           )}
 
+          {/* VERIFIED */}
           {step === 'verified' && (
-            <div className="text-center py-4 space-y-2">
-              <CheckCircle2 className="w-12 h-12 text-primary mx-auto" />
-              <p className="font-heading font-bold text-foreground">Verified!</p>
-              <p className="text-sm text-muted-foreground">Redirecting...</p>
+            <div className="text-center space-y-2">
+              <CheckCircle2 className="w-10 h-10 mx-auto text-green-500" />
+              <p>Verified! Redirecting...</p>
             </div>
           )}
         </div>
 
-        <p className="text-center text-sm text-muted-foreground mt-4">
+        {/* Toggle */}
+        <p className="text-center mt-4 text-sm">
           {mode === 'register' ? (
-            <>Already have an account?{' '}
-              <button onClick={() => { setMode('login'); setStep('form'); setError(''); }} className="text-primary font-semibold">Login</button>
+            <>
+              Already have account?{' '}
+              <button
+                onClick={() => {
+                  setMode('login');
+                  setStep('form');
+                  setError('');
+                }}
+                className="text-primary font-semibold"
+              >
+                Login
+              </button>
             </>
           ) : (
-            <>New here?{' '}
-              <button onClick={() => { setMode('register'); setStep('form'); setError(''); }} className="text-primary font-semibold">Register</button>
+            <>
+              New here?{' '}
+              <button
+                onClick={() => {
+                  setMode('register');
+                  setStep('form');
+                  setError('');
+                }}
+                className="text-primary font-semibold"
+              >
+                Register
+              </button>
             </>
           )}
         </p>
