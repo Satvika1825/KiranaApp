@@ -4,6 +4,7 @@
  */
 import { useState } from 'react';
 import { getOwnerProfile, saveOwnerProfile, getShop, saveShop } from '@/lib/store';
+import { api } from '@/lib/api';
 import { User, Store, Clock, Check } from 'lucide-react';
 
 const OwnerProfile = () => {
@@ -18,13 +19,56 @@ const OwnerProfile = () => {
     openingTime: shop?.openingTime || '07:00',
     closingTime: shop?.closingTime || '21:00',
   });
+  const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState('');
 
-  const handleSave = () => {
-    if (owner) saveOwnerProfile({ ...owner, fullName: form.fullName, email: form.email });
-    if (shop) saveShop({ ...shop, shopName: form.shopName, shopType: form.shopType, openingTime: form.openingTime, closingTime: form.closingTime });
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  const handleSave = async () => {
+    setLoading(true);
+    setError('');
+    setSaved(false);
+
+    try {
+      // 1. Update Owner Info (Name, Email) - re-uses register endpoint for updates
+      if (owner) {
+        const updatedOwner = await api.auth.registerOwner({
+          fullName: form.fullName,
+          email: form.email,
+          mobile: owner.mobile, // keep existing mobile
+          password: '' // not updating password here
+        });
+
+        // Update local storage with new owner details
+        saveOwnerProfile({ ...owner, fullName: updatedOwner.user.fullName, email: updatedOwner.user.email });
+      }
+
+      // 2. Update Shop Details
+      if (shop) {
+        const updatedShop = await api.stores.create({
+          ownerId: owner?.id,
+          shopName: form.shopName,
+          shopType: form.shopType,
+          openingTime: form.openingTime,
+          closingTime: form.closingTime,
+          // Preserve other shop fields
+          shopPhoto: shop.shopPhoto,
+          address: shop.address,
+          gpsLocation: shop.gpsLocation,
+          weeklyOff: shop.weeklyOff
+        });
+
+        // Update local storage with new shop details
+        saveShop(updatedShop.store);
+      }
+
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } catch (err: any) {
+      console.error('Profile update failed:', err);
+      setError(err.message || 'Failed to update profile');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const update = (key: string, value: string) => setForm({ ...form, [key]: value });
@@ -34,6 +78,12 @@ const OwnerProfile = () => {
       <h2 className="text-xl font-heading font-bold text-foreground mb-4">Profile</h2>
 
       <div className="space-y-4">
+        {error && (
+          <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg border border-destructive/20">
+            {error}
+          </div>
+        )}
+
         <div className="kc-card-flat p-5 space-y-4">
           <h3 className="font-heading font-bold text-foreground flex items-center gap-2 text-sm">
             <User className="w-4 h-4 text-primary" /> Personal Info
@@ -93,8 +143,12 @@ const OwnerProfile = () => {
           </div>
         </div>
 
-        <button onClick={handleSave} className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2">
-          {saved ? <><Check className="w-4 h-4" /> Saved!</> : 'Save Changes'}
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-70"
+        >
+          {loading ? 'Saving...' : saved ? <><Check className="w-4 h-4" /> Saved!</> : 'Save Changes'}
         </button>
       </div>
     </div>

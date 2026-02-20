@@ -15,6 +15,12 @@ const generateToken = (user) => {
   );
 };
 
+// Middleware to log all auth requests
+router.use((req, res, next) => {
+  console.log(`[AUTH] ${req.method} ${req.path}`, JSON.stringify(req.body));
+  next();
+});
+
 // POST /api/auth/send-otp
 router.post('/send-otp', async (req, res) => {
   try {
@@ -56,9 +62,18 @@ router.post('/verify-otp', async (req, res) => {
     const record = otpStore[mobile];
     console.log('OTP record found:', record);
 
-    if (!record) return res.status(400).json({ error: 'OTP not sent or expired' });
-    if (record.otp !== otp) return res.status(400).json({ error: 'Invalid OTP' });
-    if (Date.now() > record.expiresAt) return res.status(400).json({ error: 'OTP expired' });
+    if (!record) {
+      console.log('OTP Verification Failed: No record found for', mobile);
+      return res.status(400).json({ error: 'OTP not sent or expired (no record found)' });
+    }
+    if (record.otp !== otp) {
+      console.log(`OTP Verification Failed: Invalid OTP. Expected ${record.otp}, Got ${otp}`);
+      return res.status(400).json({ error: 'Invalid OTP' });
+    }
+    if (Date.now() > record.expiresAt) {
+      console.log('OTP Verification Failed: Expired');
+      return res.status(400).json({ error: 'OTP expired' });
+    }
 
     delete otpStore[mobile];
 
