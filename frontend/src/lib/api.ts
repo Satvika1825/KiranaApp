@@ -45,6 +45,18 @@ export const api = {
             }
             return res.json();
         },
+        loginCustomer: async (mobile: string, password: string) => {
+            const res = await fetch(`${API_URL}/auth/login-customer`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile, password }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to login');
+            }
+            return res.json();
+        },
     },
 
     // ============ STORES ============

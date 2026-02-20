@@ -231,4 +231,44 @@ router.post('/login-owner', async (req, res) => {
   }
 });
 
+// POST /api/auth/login-customer
+router.post('/login-customer', async (req, res) => {
+  try {
+    let { mobile, password } = req.body;
+    if (!mobile) return res.status(400).json({ error: 'Mobile number required' });
+    if (!password) return res.status(400).json({ error: 'Password required' });
+
+    mobile = mobile.replace(/\D/g, '');
+    if (mobile.length < 10 || mobile.length > 15) {
+      return res.status(400).json({ error: 'Invalid mobile number' });
+    }
+
+    // Find customer user specifically
+    const user = await User.findOne({ mobile, role: 'customer' });
+    if (!user) {
+      return res.status(404).json({ error: 'Customer not found. Please register first.' });
+    }
+
+    if (!user.password || user.password !== password) {
+      return res.status(401).json({ error: 'Invalid password. Please try again.' });
+    }
+
+    const token = generateToken(user);
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        mobile: user.mobile,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    console.error('Login Customer Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
