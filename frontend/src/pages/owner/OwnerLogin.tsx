@@ -14,7 +14,10 @@ const OwnerLogin = () => {
   const [form, setForm] = useState({ fullName: '', mobile: '', email: '', password: '' });
   const [otp, setOtp] = useState('');
   const [serverOtp, setServerOtp] = useState('');
+
+  // Login state (mobile + password — no OTP)
   const [loginMobile, setLoginMobile] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [error, setError] = useState('');
 
   // Step 1: Send OTP for registration
@@ -32,80 +35,72 @@ const OwnerLogin = () => {
     }
   };
 
-  // Step 1: Send OTP for login
+  // Login with mobile + password directly (no OTP)
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!loginMobile) return;
+    if (!loginMobile || !loginPassword) return;
     try {
-      const data = await api.auth.sendOtp(loginMobile);
-      if (data.otp) setServerOtp(data.otp);
-      setStep('otp');
-    } catch (err) {
-      setError('Failed to send OTP. Please try again.');
-      console.error(err);
+      const mobile = loginMobile.replace(/\D/g, '');
+      const data = await api.auth.loginOwner(mobile, loginPassword);
+      if (data.token) localStorage.setItem('token', data.token);
+      const newOwnerId = data.user?.id || generateId();
+
+      // Clear stale shop/products if a different owner was stored before
+      if (existing && existing.id !== newOwnerId) {
+        localStorage.removeItem('kc_shop');
+        localStorage.removeItem('kc_products');
+        localStorage.removeItem('kc_orders');
+        localStorage.removeItem('kc_owner_notifs');
+      }
+
+      saveOwnerProfile({
+        id: newOwnerId,
+        fullName: data.user?.fullName || data.user?.name || '',
+        mobile,
+        email: data.user?.email || '',
+        password: ''
+      });
+
+      await syncService.syncOwnerData();
+      setStep('verified');
+      setTimeout(() => navigate('/owner/dashboard'), 1000);
+    } catch (err: any) {
+      console.error('Login failed:', err);
+      setError(err.message || 'Login failed. Please try again.');
     }
   };
 
-  // Step 2: Verify OTP then register/login
+  // Step 2: Verify OTP then register
   const handleVerifyOtp = async () => {
     if (otp.length < 4) return;
     setError('');
 
     try {
-      let newOwnerId = '';
+      const mobile = form.mobile.replace(/\D/g, '');
+      const data = await api.auth.verifyOtp(mobile, otp, form.fullName, form.email, 'kirana_owner', form.password);
+      if (data.token) localStorage.setItem('token', data.token);
+      const newOwnerId = data.user?.id || generateId();
 
-      if (mode === 'register') {
-        const mobile = form.mobile.replace(/\D/g, '');
-        const data = await api.auth.verifyOtp(mobile, otp, form.fullName, form.email, 'kirana_owner');
-        if (data.token) localStorage.setItem('token', data.token);
-        newOwnerId = data.user?.id || generateId();
-
-        // ✅ Clear stale shop/products if a different owner was stored before
-        if (existing && existing.id !== newOwnerId) {
-          localStorage.removeItem('kc_shop');
-          localStorage.removeItem('kc_products');
-          localStorage.removeItem('kc_orders');
-          localStorage.removeItem('kc_owner_notifs');
-        }
-
-        saveOwnerProfile({
-          id: newOwnerId,
-          fullName: data.user?.name || form.fullName,
-          mobile,
-          email: data.user?.email || form.email,
-          password: ''
-        });
-
-      } else {
-        const mobile = loginMobile.replace(/\D/g, '');
-        const data = await api.auth.verifyOtp(mobile, otp, undefined, undefined, 'kirana_owner');
-        if (data.token) localStorage.setItem('token', data.token);
-        newOwnerId = data.user?.id || generateId();
-
-        // ✅ Clear stale shop/products if a different owner was stored before
-        if (existing && existing.id !== newOwnerId) {
-          localStorage.removeItem('kc_shop');
-          localStorage.removeItem('kc_products');
-          localStorage.removeItem('kc_orders');
-          localStorage.removeItem('kc_owner_notifs');
-        }
-
-        saveOwnerProfile({
-          id: newOwnerId,
-          fullName: data.user?.name || '',
-          mobile,
-          email: data.user?.email || '',
-          password: ''
-        });
+      // Clear stale shop/products if a different owner was stored before
+      if (existing && existing.id !== newOwnerId) {
+        localStorage.removeItem('kc_shop');
+        localStorage.removeItem('kc_products');
+        localStorage.removeItem('kc_orders');
+        localStorage.removeItem('kc_owner_notifs');
       }
 
-      await syncService.syncOwnerData();
+      saveOwnerProfile({
+        id: newOwnerId,
+        fullName: data.user?.name || form.fullName,
+        mobile,
+        email: data.user?.email || form.email,
+        password: ''
+      });
 
+      await syncService.syncOwnerData();
       setStep('verified');
-      setTimeout(() => {
-        navigate(mode === 'register' ? '/owner/shop-setup' : '/owner/dashboard');
-      }, 1000);
+      setTimeout(() => navigate('/owner/shop-setup'), 1000);
 
     } catch (err: any) {
       console.error('Verification failed:', err);
@@ -129,13 +124,14 @@ const OwnerLogin = () => {
         </div>
 
         <div className="kc-card-flat p-6">
-          {/* ✅ Error display */}
+          {/* Error display */}
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm text-center">
               {error}
             </div>
           )}
 
+          {/* ---- REGISTER: Step 1 — Fill form ---- */}
           {step === 'form' && mode === 'register' && (
             <form onSubmit={handleRegister} className="space-y-4">
               <div>
@@ -188,6 +184,7 @@ const OwnerLogin = () => {
             </form>
           )}
 
+          {/* ---- LOGIN: Mobile + Password (no OTP) ---- */}
           {step === 'form' && mode === 'login' && (
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
@@ -202,16 +199,28 @@ const OwnerLogin = () => {
                   required
                 />
               </div>
+              <div>
+                <label className="text-sm font-medium text-foreground mb-1 block">Password / PIN</label>
+                <input
+                  type="password"
+                  value={loginPassword}
+                  onChange={e => setLoginPassword(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
               <button type="submit" className="w-full bg-primary text-primary-foreground py-2.5 rounded-lg font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
-                Send OTP <ArrowRight className="w-4 h-4" />
+                Login <ArrowRight className="w-4 h-4" />
               </button>
             </form>
           )}
 
+          {/* ---- OTP STEP (register only) ---- */}
           {step === 'otp' && (
             <div className="space-y-4 text-center">
               <p className="text-sm text-muted-foreground">
-                Enter the OTP sent to <strong>{mode === 'register' ? form.mobile : loginMobile}</strong>
+                Enter the OTP sent to <strong>{form.mobile}</strong>
               </p>
               <input
                 type="text"

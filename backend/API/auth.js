@@ -40,12 +40,12 @@ router.post('/send-otp', async (req, res) => {
 // POST /api/auth/verify-otp
 router.post('/verify-otp', async (req, res) => {
   try {
-    let { mobile, otp, name, email, role } = req.body;
+    let { mobile, otp, name, email, role, password } = req.body;
     if (!mobile) return res.status(400).json({ error: 'Mobile number required' });
     if (!otp) return res.status(400).json({ error: 'OTP required' });
 
     mobile = mobile.replace(/\D/g, '');
-    
+
     // Validate mobile after sanitization
     if (mobile.length < 10 || mobile.length > 15) {
       return res.status(400).json({ error: 'Invalid mobile format' });
@@ -71,6 +71,7 @@ router.post('/verify-otp', async (req, res) => {
         mobile,
         name: name || '',
         email: email || '',
+        password: password || '',
         role: role || 'customer',
         isActive: true
       });
@@ -78,6 +79,7 @@ router.post('/verify-otp', async (req, res) => {
     } else {
       if (name) user.name = name;
       if (email) user.email = email;
+      if (password) user.password = password;  // update password if provided
       if (role && role !== user.role) user.role = role;
       user.isActive = true;
       await user.save();
@@ -118,7 +120,7 @@ router.post('/verify-otp', async (req, res) => {
   } catch (err) {
     console.error('Verify OTP Error:', err);
     console.error('Error stack:', err.stack);
-    res.status(500).json({ 
+    res.status(500).json({
       error: err.message || 'Verification failed',
       details: err.toString()
     });
@@ -178,23 +180,22 @@ router.post('/register-owner', async (req, res) => {
 // POST /api/auth/login-owner
 router.post('/login-owner', async (req, res) => {
   try {
-    let { mobile, fullName, email } = req.body;
+    let { mobile, password } = req.body;
     if (!mobile) return res.status(400).json({ error: 'Mobile number required' });
+    if (!password) return res.status(400).json({ error: 'Password required' });
 
     mobile = mobile.replace(/\D/g, '');
     if (mobile.length < 10 || mobile.length > 15) {
       return res.status(400).json({ error: 'Invalid mobile number' });
     }
 
-    let user = await User.findOne({ mobile, role: 'kirana_owner' });
+    const user = await User.findOne({ mobile, role: 'kirana_owner' });
     if (!user) {
-      user = await User.create({
-        mobile,
-        name: fullName || '',
-        email: email || '',
-        role: 'kirana_owner'
-      });
-      console.log('New kirana owner created:', user._id);
+      return res.status(404).json({ error: 'Owner not found. Please register first.' });
+    }
+
+    if (user.password !== password) {
+      return res.status(401).json({ error: 'Invalid password. Please try again.' });
     }
 
     const token = generateToken(user);

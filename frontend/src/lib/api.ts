@@ -12,11 +12,11 @@ export const api = {
             if (!res.ok) throw new Error('Failed to send OTP');
             return res.json();
         },
-        verifyOtp: async (mobile: string, otp: string, name?: string, email?: string, role?: string) => {
+        verifyOtp: async (mobile: string, otp: string, name?: string, email?: string, role?: string, password?: string) => {
             const res = await fetch(`${API_URL}/auth/verify-otp`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile, otp, name, email, role }),
+                body: JSON.stringify({ mobile, otp, name, email, role, password }),
             });
             if (!res.ok) {
                 const data = await res.json();
@@ -33,13 +33,16 @@ export const api = {
             if (!res.ok) throw new Error('Failed to register owner');
             return res.json();
         },
-        loginOwner: async (mobile: string) => {
+        loginOwner: async (mobile: string, password: string) => {
             const res = await fetch(`${API_URL}/auth/login-owner`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mobile }),
+                body: JSON.stringify({ mobile, password }),
             });
-            if (!res.ok) throw new Error('Failed to login owner');
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to login');
+            }
             return res.json();
         },
     },
@@ -74,6 +77,28 @@ export const api = {
 
     // ============ PRODUCTS ============
     products: {
+        getCatalog: async () => {
+            const res = await fetch(`${API_URL}/products/catalog`);
+            if (!res.ok) throw new Error('Failed to fetch catalog');
+            return res.json();
+        },
+        seedCatalog: async () => {
+            const res = await fetch(`${API_URL}/products/catalog/seed`, { method: 'POST' });
+            if (!res.ok) throw new Error('Failed to seed catalog');
+            return res.json();
+        },
+        toggleCatalogProduct: async (catalogProductId: string, ownerId: string, enabled: boolean, price?: number) => {
+            const res = await fetch(`${API_URL}/products/toggle`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ catalogProductId, ownerId, enabled, price }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Toggle failed');
+            }
+            return res.json();
+        },
         getAll: async (shopOwnerId?: string, category?: string, search?: string) => {
             const params = new URLSearchParams();
             if (shopOwnerId) params.set('shopOwnerId', shopOwnerId);
