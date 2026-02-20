@@ -61,6 +61,11 @@ const storeSchema = new mongoose.Schema({
   deliveryCharge: {
     type: Number,
     default: 20
+  },
+  status: {
+    type: String,
+    enum: ['active', 'suspended'],
+    default: 'active'
   }
 }, {
   timestamps: true

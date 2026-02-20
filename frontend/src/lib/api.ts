@@ -348,5 +348,59 @@ export const api = {
             if (!res.ok) throw new Error('Failed to fetch agents');
             return res.json();
         }
+    },
+
+    // ============ ADMIN ============
+    admin: {
+        login: async (email: string, password: string) => {
+            const res = await fetch(`${API_URL}/admin/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+            if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Login failed'); }
+            return res.json();
+        },
+        getStats: async () => {
+            const res = await fetch(`${API_URL}/admin/stats`);
+            if (!res.ok) throw new Error('Failed to fetch stats');
+            return res.json();
+        },
+        getCustomers: async () => {
+            const res = await fetch(`${API_URL}/admin/customers`);
+            if (!res.ok) throw new Error('Failed to fetch customers');
+            return res.json();
+        },
+        blockCustomer: async (userId: string) => {
+            const res = await fetch(`${API_URL}/admin/customers/${userId}/block`, { method: 'PUT' });
+            if (!res.ok) throw new Error('Failed to update customer');
+            return res.json();
+        },
+        getOwners: async () => {
+            const res = await fetch(`${API_URL}/admin/owners`);
+            if (!res.ok) throw new Error('Failed to fetch owners');
+            return res.json();
+        },
+        suspendOwner: async (userId: string) => {
+            const res = await fetch(`${API_URL}/admin/owners/${userId}/suspend`, { method: 'PUT' });
+            if (!res.ok) throw new Error('Failed to update owner');
+            return res.json();
+        },
+        getStores: async () => {
+            const res = await fetch(`${API_URL}/admin/stores`);
+            if (!res.ok) throw new Error('Failed to fetch stores');
+            return res.json();
+        },
+        suspendStore: async (storeId: string) => {
+            const res = await fetch(`${API_URL}/admin/stores/${storeId}/suspend`, { method: 'PUT' });
+            if (!res.ok) throw new Error('Failed to update store');
+            return res.json();
+        },
+        getReports: async () => {
+            const res = await fetch(`${API_URL}/admin/reports`);
+            if (!res.ok) throw new Error('Failed to fetch reports');
+            return res.json();
+        },
     }
 };
+

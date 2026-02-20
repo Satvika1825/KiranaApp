@@ -245,9 +245,18 @@ const CustomerProducts = () => {
               className="bg-white rounded-xl shadow-sm p-3 flex flex-col"
             >
               {/* PRODUCT IMAGE */}
-              <div className="w-full h-40 overflow-hidden rounded-lg mb-3 bg-gray-200">
-                <div className="w-full h-full flex items-center justify-center">
-                  <Package className="w-8 h-8 text-gray-400" />
+              <div className="w-full h-36 overflow-hidden rounded-xl mb-3 bg-gradient-to-br from-slate-100 to-slate-200 relative">
+                {p.image ? (
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="w-full h-full object-cover"
+                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }}
+                  />
+                ) : null}
+                <div className={`w-full h-full flex flex-col items-center justify-center gap-1 ${p.image ? 'hidden' : ''}`}>
+                  <span className="text-3xl font-bold text-slate-400">{p.name.charAt(0).toUpperCase()}</span>
+                  <span className="text-xs text-slate-400">{p.category}</span>
                 </div>
               </div>
 

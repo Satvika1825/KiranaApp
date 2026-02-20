@@ -1,24 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Eye, EyeOff } from 'lucide-react';
-
-const ADMIN_USERS = [
-  {
-    email: 'patnamsatvika@gmail.com',
-    password: '1234',
-    name: 'Satvika'
-  },
-  {
-    email: 'sathwikayalla34@gmail.com', // fixed typo gmail
-    password: '1234',
-    name: 'SathwikaReddy'
-  },
-  {
-    email: 'divijayellanki@gmail.com',
-    password: '1234',
-    name: 'Divija'
-  }
-];
+import { ShieldCheck, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -26,28 +9,30 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
 
-    // 🔥 Correct logic: check inside ADMIN_USERS
-    const admin = ADMIN_USERS.find(
-      user => user.email === email && user.password === password
-    );
-
-    if (admin) {
+    try {
+      const data = await api.admin.login(email.trim(), password);
       localStorage.setItem(
         'kc_session',
         JSON.stringify({
           role: 'admin',
-          email: admin.email,
-          name: admin.name
+          email: data.user.email,
+          name: data.user.name,
+          token: data.token,
+          id: data.user.id
         })
       );
-
       navigate('/admin/dashboard');
-    } else {
-      setError('Invalid email or password');
+    } catch (err: any) {
+      setError(err.message || 'Invalid email or password');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -59,9 +44,7 @@ const AdminLogin = () => {
             <ShieldCheck className="w-8 h-8 text-indigo-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Admin Login</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            KiranaConnect Administration
-          </p>
+          <p className="text-sm text-gray-500 mt-1">KiranaConnect Administration</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-5">
@@ -72,9 +55,7 @@ const AdminLogin = () => {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Email
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
             <input
               type="email"
               value={email}
@@ -86,10 +67,7 @@ const AdminLogin = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Password
-            </label>
-
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
             <div className="relative">
               <input
                 type={showPw ? 'text' : 'password'}
@@ -99,7 +77,6 @@ const AdminLogin = () => {
                 placeholder="Enter password"
                 required
               />
-
               <button
                 type="button"
                 onClick={() => setShowPw(!showPw)}
@@ -112,14 +89,16 @@ const AdminLogin = () => {
 
           <button
             type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/25"
+            disabled={loading}
+            className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-colors shadow-lg shadow-indigo-500/25 flex items-center justify-center gap-2"
           >
-            Sign In
+            {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+            {loading ? 'Signing in…' : 'Sign In'}
           </button>
         </form>
 
         <p className="text-center text-xs text-gray-400 mt-6">
-          Only registered admin emails can login
+          Default: admin@kiranaapp.com / admin123
         </p>
       </div>
     </div>
