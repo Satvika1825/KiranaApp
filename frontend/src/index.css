@@ -174,15 +174,13 @@
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-emerald-500 font-bold;
   }
-<<<<<<< HEAD
-}
-.glass-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
-  border-radius: 1rem;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
-}
-=======
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    border-radius: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  }
 
   .glass {
     @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-[0_8px_32px_0_rgba(31, 38, 135, 0.07)];
@@ -224,4 +222,3 @@
     }
   }
 }
->>>>>>> 838b3b5c5c04093c4fb262e6806b8da5118e7fc2

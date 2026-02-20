@@ -56,11 +56,7 @@ export interface Product {
   price: number;
   available: boolean;
   category: string;
-<<<<<<< HEAD
-  image: string;   // ✅ ADD THIS
-=======
-  image?: string;
->>>>>>> 838b3b5c5c04093c4fb262e6806b8da5118e7fc2
+  image: string;
 }
 
 export interface CartItem {
@@ -287,33 +283,32 @@ export const seedDemoData = () => {
     closingTime: '21:00',
     weeklyOff: 'Sunday',
   };
-const demoProducts: Product[] = [
-  { id: 'p1', shopOwnerId: 'owner1', name: 'Dal (1kg)', price: 140, available: true, category: 'Pulses', image: '/images/dal.png' },
-  { id: 'p2', shopOwnerId: 'owner1', name: 'Basmati Rice (5kg)', price: 450, available: true, category: 'Rice', image: '/images/rice.jpg' },
-  { id: 'p3', shopOwnerId: 'owner1', name: 'Amul Butter (500g)', price: 280, available: true, category: 'Dairy', image: '/images/butter.jpg' },
-  { id: 'p4', shopOwnerId: 'owner1', name: 'Sugar (1kg)', price: 48, available: true, category: 'Essentials', image: '/images/sugar.jpg' },
-  { id: 'p5', shopOwnerId: 'owner1', name: 'Sunflower Oil (1L)', price: 180, available: true, category: 'Oil', image: '/images/oil.jpg' },
-  { id: 'p6', shopOwnerId: 'owner1', name: 'Wheat Flour (5kg)', price: 220, available: true, category: 'Flour', image: '/images/atta.jpg' },
-  { id: 'p7', shopOwnerId: 'owner1', name: 'Tea Powder (250g)', price: 120, available: true, category: 'Beverages', image: '/images/tea.jpg' },
-  { id: 'p8', shopOwnerId: 'owner1', name: 'Milk (1L)', price: 60, available: true, category: 'Dairy', image: '/images/milk.png' },
-  { id: 'p9', shopOwnerId: 'owner1', name: 'Onion (1kg)', price: 35, available: true, category: 'Vegetables', image: '/images/onion.jpg' },
-  { id: 'p10', shopOwnerId: 'owner1', name: 'Maggi Noodles (4 pack)', price: 56, available: true, category: 'Snacks', image: '/images/maggi.jpg' },
-  { id: 'p11', shopOwnerId: 'owner1', name: 'Salt (1kg)', price: 20, available: true, category: 'Essentials', image: '/images/salt.jpg' },
-  { id: 'p12', shopOwnerId: 'owner1', name: 'Biscuits (Pack)', price: 30, available: true, category: 'Snacks', image: '/images/biscuits.jpg' },
-  { id: 'p13', shopOwnerId: 'owner1', name: 'Soap (Pack of 3)', price: 75, available: true, category: 'Personal Care', image: '/images/soap.jpg' },
-  { id: 'p14', shopOwnerId: 'owner1', name: 'Shampoo (200ml)', price: 120, available: true, category: 'Personal Care', image: '/images/shampoo.jpg' },
-  { id: 'p15', shopOwnerId: 'owner1', name: 'Toothpaste (150g)', price: 95, available: true, category: 'Personal Care', image: '/images/toothpaste.jpg' },
-  { id: 'p16', shopOwnerId: 'owner1', name: 'Coffee (200g)', price: 210, available: true, category: 'Beverages', image: '/images/coffee.jpg' },
-  { id: 'p17', shopOwnerId: 'owner1', name: 'Chips (Pack)', price: 20, available: true, category: 'Snacks', image: '/images/chips.jpg' },
-  { id: 'p18', shopOwnerId: 'owner1', name: 'Curd (500g)', price: 40, available: true, category: 'Dairy', image: '/images/curd.jpg' },
-  { id: 'p19', shopOwnerId: 'owner1', name: 'Bread (400g)', price: 45, available: true, category: 'Bakery', image: '/images/bread.jpg' },
-  { id: 'p20', shopOwnerId: 'owner1', name: 'Eggs (12 pcs)', price: 72, available: true, category: 'Poultry', image: '/images/eggs.jpg' },
-];
+  const demoProducts: Product[] = [
+    { id: 'p1', shopOwnerId: 'owner1', name: 'Dal (1kg)', price: 140, available: true, category: 'Pulses', image: '/images/dal.png' },
+    { id: 'p2', shopOwnerId: 'owner1', name: 'Basmati Rice (5kg)', price: 450, available: true, category: 'Rice', image: '/images/rice.jpg' },
+    { id: 'p3', shopOwnerId: 'owner1', name: 'Amul Butter (500g)', price: 280, available: true, category: 'Dairy', image: '/images/butter.jpg' },
+    { id: 'p4', shopOwnerId: 'owner1', name: 'Sugar (1kg)', price: 48, available: true, category: 'Essentials', image: '/images/sugar.jpg' },
+    { id: 'p5', shopOwnerId: 'owner1', name: 'Sunflower Oil (1L)', price: 180, available: true, category: 'Oil', image: '/images/oil.jpg' },
+    { id: 'p6', shopOwnerId: 'owner1', name: 'Wheat Flour (5kg)', price: 220, available: true, category: 'Flour', image: '/images/atta.jpg' },
+    { id: 'p7', shopOwnerId: 'owner1', name: 'Tea Powder (250g)', price: 120, available: true, category: 'Beverages', image: '/images/tea.jpg' },
+    { id: 'p8', shopOwnerId: 'owner1', name: 'Milk (1L)', price: 60, available: true, category: 'Dairy', image: '/images/milk.png' },
+    { id: 'p9', shopOwnerId: 'owner1', name: 'Onion (1kg)', price: 35, available: true, category: 'Vegetables', image: '/images/onion.jpg' },
+    { id: 'p10', shopOwnerId: 'owner1', name: 'Maggi Noodles (4 pack)', price: 56, available: true, category: 'Snacks', image: '/images/maggi.jpg' },
+    { id: 'p11', shopOwnerId: 'owner1', name: 'Salt (1kg)', price: 20, available: true, category: 'Essentials', image: '/images/salt.jpg' },
+    { id: 'p12', shopOwnerId: 'owner1', name: 'Biscuits (Pack)', price: 30, available: true, category: 'Snacks', image: '/images/biscuits.jpg' },
+    { id: 'p13', shopOwnerId: 'owner1', name: 'Soap (Pack of 3)', price: 75, available: true, category: 'Personal Care', image: '/images/soap.jpg' },
+    { id: 'p14', shopOwnerId: 'owner1', name: 'Shampoo (200ml)', price: 120, available: true, category: 'Personal Care', image: '/images/shampoo.jpg' },
+    { id: 'p15', shopOwnerId: 'owner1', name: 'Toothpaste (150g)', price: 95, available: true, category: 'Personal Care', image: '/images/toothpaste.jpg' },
+    { id: 'p16', shopOwnerId: 'owner1', name: 'Coffee (200g)', price: 210, available: true, category: 'Beverages', image: '/images/coffee.jpg' },
+    { id: 'p17', shopOwnerId: 'owner1', name: 'Chips (Pack)', price: 20, available: true, category: 'Snacks', image: '/images/chips.jpg' },
+    { id: 'p18', shopOwnerId: 'owner1', name: 'Curd (500g)', price: 40, available: true, category: 'Dairy', image: '/images/curd.jpg' },
+    { id: 'p19', shopOwnerId: 'owner1', name: 'Bread (400g)', price: 45, available: true, category: 'Bakery', image: '/images/bread.jpg' },
+    { id: 'p20', shopOwnerId: 'owner1', name: 'Eggs (12 pcs)', price: 72, available: true, category: 'Poultry', image: '/images/eggs.jpg' },
+  ];
   saveOwnerProfile(demoOwner);
   saveShop(demoShop);
   saveProducts(demoProducts);
 };
-<<<<<<< HEAD
 // Initialize seed data on first load
 // ============ ADMIN PROFILE ============
 
@@ -330,9 +325,5 @@ export const getAdminProfile = (): AdminProfile | null =>
 export const saveAdminProfile = (profile: AdminProfile) =>
   set('kc_admin_profile', profile);
 
-seedDemoData();
-=======
-// Seed data is intentionally NOT auto-run here.
-// Call seedDemoData() manually only for testing/demo purposes.
->>>>>>> 838b3b5c5c04093c4fb262e6806b8da5118e7fc2
+// seedDemoData(); // Disabled auto-seed to protect real data
 
