@@ -56,7 +56,11 @@ export interface Product {
   price: number;
   available: boolean;
   category: string;
+<<<<<<< HEAD
   image: string;   // ✅ ADD THIS
+=======
+  image?: string;
+>>>>>>> 838b3b5c5c04093c4fb262e6806b8da5118e7fc2
 }
 
 export interface CartItem {
@@ -309,6 +313,7 @@ const demoProducts: Product[] = [
   saveShop(demoShop);
   saveProducts(demoProducts);
 };
+<<<<<<< HEAD
 // Initialize seed data on first load
 // ============ ADMIN PROFILE ============
 
@@ -326,4 +331,8 @@ export const saveAdminProfile = (profile: AdminProfile) =>
   set('kc_admin_profile', profile);
 
 seedDemoData();
+=======
+// Seed data is intentionally NOT auto-run here.
+// Call seedDemoData() manually only for testing/demo purposes.
+>>>>>>> 838b3b5c5c04093c4fb262e6806b8da5118e7fc2
 

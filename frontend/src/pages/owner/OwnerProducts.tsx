@@ -1,19 +1,12 @@
 /**
  * Product Management Page — Owner
- * 
- * Features:
- * - List all products with inline price editing
- * - Toggle availability ON/OFF (controls visibility to customers)
- * - Add new products
- * - Products stored in localStorage
- * 
- * TOGGLE VISIBILITY:
- * - available=true → shown to customers
- * - available=false → hidden from customers
+ * Connected to backend API for all CRUD operations.
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Pencil, Check, X, Package } from 'lucide-react';
-import { getProducts, updateProduct, addProduct, deleteProduct, generateId, getOwnerProfile } from '@/lib/store';
+import { getProducts, updateProduct, addProduct, deleteProduct, generateId, getOwnerProfile, saveProducts } from '@/lib/store';
+import { api } from '@/lib/api';
+import { syncService } from '@/lib/sync';
 
 const OwnerProducts = () => {
   const [products, setProducts] = useState(getProducts());
@@ -23,12 +16,46 @@ const OwnerProducts = () => {
   const [newProduct, setNewProduct] = useState({ name: '', price: '', category: '' });
   const owner = getOwnerProfile();
 
+  // Fetch products from backend on load
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const data = await api.products.getAll(owner?.id);
+        if (data.products && data.products.length > 0) {
+          // Map backend products to frontend format
+          const mapped = data.products.map((p: any) => ({
+            id: p.id,
+            shopOwnerId: p.shopOwnerId,
+            name: p.name,
+            price: p.price,
+            available: p.available,
+            category: p.category,
+            image: p.image || ''
+          }));
+          saveProducts(mapped);
+          setProducts(mapped);
+        }
+      } catch {
+        // Use localStorage products
+        setProducts(getProducts());
+      }
+    };
+    fetchProducts();
+  }, []);
+
   const refresh = () => setProducts(getProducts());
 
   // Toggle product availability
-  const handleToggle = (id: string, current: boolean) => {
+  const handleToggle = async (id: string, current: boolean) => {
     updateProduct(id, { available: !current });
     refresh();
+    try {
+      await api.products.update(id, { available: !current });
+      console.log('Availability synced to cloud');
+    } catch {
+      // Fallback: full sync if direct update fails
+      syncService.syncOwnerData();
+    }
   };
 
   // Start editing price
@@ -38,32 +65,52 @@ const OwnerProducts = () => {
   };
 
   // Save edited price
-  const saveEdit = (id: string) => {
-    updateProduct(id, { price: Number(editPrice) });
+  const saveEdit = async (id: string) => {
+    const newPrice = Number(editPrice);
+    updateProduct(id, { price: newPrice });
     setEditingId(null);
     refresh();
+    try {
+      await api.products.update(id, { price: newPrice });
+      console.log('Price synced to cloud');
+    } catch {
+      syncService.syncOwnerData();
+    }
   };
 
   // Add new product
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!newProduct.name || !newProduct.price) return;
-    addProduct({
+    const product = {
       id: generateId(),
       shopOwnerId: owner?.id || 'owner1',
       name: newProduct.name,
       price: Number(newProduct.price),
       available: true,
       category: newProduct.category || 'General',
-    });
+    };
+    addProduct(product);
     setNewProduct({ name: '', price: '', category: '' });
     setShowAdd(false);
     refresh();
+    try {
+      await api.products.create(product);
+      console.log('Product created in cloud');
+    } catch {
+      syncService.syncOwnerData();
+    }
   };
 
   // Delete product
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     deleteProduct(id);
     refresh();
+    try {
+      await api.products.delete(id);
+      console.log('Product deleted from cloud');
+    } catch {
+      syncService.syncOwnerData();
+    }
   };
 
   return (

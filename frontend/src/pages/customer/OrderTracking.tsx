@@ -1,12 +1,11 @@
 /**
  * Order Tracking Page — Customer
- * Shows order status with a progress bar.
- * When delivered: confirm receipt and digital receipt.
- * No rating/review system.
+ * Fetches order from backend API with localStorage fallback.
  */
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getOrders, getShop } from '@/lib/store';
+import { api } from '@/lib/api';
 import { Package, CheckCircle2, Truck, ChefHat, ClipboardCheck, Receipt } from 'lucide-react';
 
 const steps = [
@@ -24,11 +23,24 @@ const OrderTracking = () => {
   const [order, setOrder] = useState(getOrders().find(o => o.id === orderId));
   const [confirmed, setConfirmed] = useState(false);
 
+  // Fetch from backend and poll for updates
   useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        const data = await api.orders.getDetail(orderId!);
+        if (data.order) setOrder(data.order);
+      } catch {
+        // Use localStorage
+      }
+    };
+    fetchOrder();
+
     const interval = setInterval(() => {
+      fetchOrder();
+      // Also check localStorage for local updates
       const updated = getOrders().find(o => o.id === orderId);
-      if (updated) setOrder(updated);
-    }, 2000);
+      if (updated && !order) setOrder(updated);
+    }, 3000);
     return () => clearInterval(interval);
   }, [orderId]);
 
@@ -68,9 +80,8 @@ const OrderTracking = () => {
             return (
               <div key={step.status} className="flex items-center gap-3">
                 <div className="flex flex-col items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    done ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                  } ${active ? 'ring-2 ring-primary/30 ring-offset-2' : ''}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${done ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    } ${active ? 'ring-2 ring-primary/30 ring-offset-2' : ''}`}>
                     <step.icon className="w-4 h-4" />
                   </div>
                   {idx < steps.length - 1 && (
@@ -119,7 +130,7 @@ const OrderTracking = () => {
             <p>{new Date(order.createdAt).toLocaleString()}</p>
             {shop && <p>{shop.shopName}</p>}
           </div>
-          {order.items.map((item, i) => (
+          {order.items.map((item: any, i: number) => (
             <div key={i} className="flex justify-between text-sm py-0.5 text-foreground">
               <span>{item.product.name} × {item.quantity}</span>
               <span>₹{item.product.price * item.quantity}</span>
@@ -138,7 +149,7 @@ const OrderTracking = () => {
       {!isDelivered && (
         <div className="kc-card-flat p-4 mb-4">
           <h3 className="font-heading font-bold text-foreground text-sm mb-2">Order Items</h3>
-          {order.items.map((item, i) => (
+          {order.items.map((item: any, i: number) => (
             <div key={i} className="flex justify-between text-sm py-1 text-foreground">
               <span>{item.product.name} × {item.quantity}</span>
               <span>₹{item.product.price * item.quantity}</span>

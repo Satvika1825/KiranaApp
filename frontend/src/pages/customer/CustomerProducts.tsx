@@ -1,18 +1,17 @@
 /**
  * Customer Products Page
- * Shows only products with availability=ON.
- * Includes images + add to cart toast.
+ * Fetches products from backend API for a specific store (ownerId from URL).
+ * Add to cart syncs to backend.
  */
-
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  getProducts,
   getCart,
   saveCart,
-  getShop,
+  getCustomerProfile,
   type CartItem,
 } from '@/lib/store';
+import { api } from '@/lib/api';
 import {
   ShoppingCart,
   Plus,
@@ -20,19 +19,65 @@ import {
   Package,
   Search,
   X,
+  ArrowLeft,
 } from 'lucide-react';
 
 const CustomerProducts = () => {
   const navigate = useNavigate();
-  const shop = getShop();
+  const [searchParams] = useSearchParams();
 
-  const allProducts = getProducts().filter(p => p.available);
+  // Get store info from URL query params (set by CustomerHome when clicking a store)
+  const ownerId = searchParams.get('ownerId') || '';
+  const storeId = searchParams.get('storeId') || '';
 
+  const customer = getCustomerProfile();
+  const userId = customer?.id || 'guest';
+
+  const [storeName, setStoreName] = useState('Store');
+  const [allProducts, setAllProducts] = useState<any[]>([]);
   const [cart, setCart] = useState<CartItem[]>(getCart());
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showToast, setShowToast] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch store name and products from backend
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch store name
+        if (storeId) {
+          const storeData = await api.stores.getById(storeId);
+          if (storeData.store?.shopName) setStoreName(storeData.store.shopName);
+        } else if (ownerId) {
+          const storeData = await api.stores.getByOwner(ownerId);
+          if (storeData.store?.shopName) setStoreName(storeData.store.shopName);
+        }
+
+        // Fetch products for this specific store owner
+        const data = await api.products.getAll(ownerId || undefined);
+        if (data.products) {
+          const mapped = data.products.map((p: any) => ({
+            id: p._id || p.id,
+            shopOwnerId: p.shopOwnerId,
+            name: p.name,
+            price: p.price,
+            available: p.available,
+            category: p.category,
+            image: p.image || ''
+          }));
+          setAllProducts(mapped.filter((p: any) => p.available));
+        }
+      } catch (err) {
+        console.error('Failed to fetch products:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [ownerId, storeId]);
 
   const categories = useMemo(() => {
     const cats = [...new Set(allProducts.map(p => p.category))];
@@ -75,10 +120,10 @@ const CustomerProducts = () => {
       updated = cart.map(c =>
         c.product.id === productId
           ? {
-              ...c,
-              quantity:
-                c.quantity + getQty(productId),
-            }
+            ...c,
+            quantity:
+              c.quantity + getQty(productId),
+          }
           : c
       );
     } else {
@@ -90,6 +135,16 @@ const CustomerProducts = () => {
 
     setCart(updated);
     saveCart(updated);
+
+    // Sync to backend
+    const apiItems = updated.map(c => ({
+      productId: c.product.id,
+      quantity: c.quantity,
+      name: c.product.name,
+      price: c.product.price,
+      shopOwnerId: c.product.shopOwnerId
+    }));
+    api.cart.update(userId, apiItems).catch(() => { });
 
     setQuantities({
       ...quantities,
@@ -109,13 +164,16 @@ const CustomerProducts = () => {
   return (
     <div className="w-full px-6 lg:px-10 py-6 animate-fade-in relative">
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-xl font-bold">
-            {shop?.shopName || 'Store'}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {products.length} products available
-          </p>
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate('/customer/home')} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
+            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
+          </button>
+          <div>
+            <h2 className="text-xl font-bold">{storeName}</h2>
+            <p className="text-sm text-muted-foreground">
+              {loading ? 'Loading...' : `${products.length} products available`}
+            </p>
+          </div>
         </div>
 
         {cartCount > 0 && (
@@ -161,11 +219,10 @@ const CustomerProducts = () => {
             onClick={() =>
               setSelectedCategory(cat)
             }
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold ${
-              selectedCategory === cat
-                ? 'bg-primary text-white'
-                : 'bg-accent text-accent-foreground'
-            }`}
+            className={`px-3 py-1.5 rounded-full text-xs font-semibold ${selectedCategory === cat
+              ? 'bg-primary text-white'
+              : 'bg-accent text-accent-foreground'
+              }`}
           >
             {cat}
           </button>

@@ -1,57 +1,54 @@
 const mongoose = require('mongoose');
 
 const storeSchema = new mongoose.Schema({
-  owner: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+  ownerId: {
+    type: String,
     required: true
   },
-  name: {
+  shopName: {
     type: String,
-    required: [true, 'Store name is required']
+    required: [true, 'Shop name is required']
+  },
+  shopType: {
+    type: String,
+    default: 'Kirana'
+  },
+  shopPhoto: {
+    type: String,
+    default: ''
   },
   address: {
+    houseNumber: String,
+    area: String,
+    landmark: String,
+    pinCode: String
+  },
+  gpsLocation: {
     type: String,
-    required: true
+    default: ''
   },
-  phone: {
-    type: String,
-    required: true
-  },
-  location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point'
-    },
-    coordinates: {
-      type: [Number],  // [longitude, latitude]
-      required: true
-    }
-  },
+  phone: String,
   rating: {
     type: Number,
     default: 0,
     min: 0,
     max: 5
   },
-  totalReviews: {
-    type: Number,
-    default: 0
-  },
   isOpen: {
     type: Boolean,
     default: true
   },
-  operatingHours: {
-    open: {
-      type: String,
-      default: '08:00'
-    },
-    close: {
-      type: String,
-      default: '22:00'
-    }
+  openingTime: {
+    type: String,
+    default: '07:00'
+  },
+  closingTime: {
+    type: String,
+    default: '21:00'
+  },
+  weeklyOff: {
+    type: String,
+    default: ''
   },
   deliveryTime: {
     type: String,
@@ -64,24 +61,9 @@ const storeSchema = new mongoose.Schema({
   deliveryCharge: {
     type: Number,
     default: 20
-  },
-  freeDeliveryAbove: {
-    type: Number,
-    default: 200
-  },
-  photoUrl: String,
-  categories: [String],
-  subscriptionPlan: {
-    type: String,
-    enum: ['free', 'basic', 'pro', 'enterprise'],
-    default: 'free'
-  },
-  subscriptionExpiresAt: Date
+  }
 }, {
   timestamps: true
 });
-
-// Create geospatial index for location-based queries
-storeSchema.index({ location: '2dsphere' });
 
 module.exports = mongoose.model('Store', storeSchema);
