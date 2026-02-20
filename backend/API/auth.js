@@ -271,4 +271,43 @@ router.post('/login-customer', async (req, res) => {
   }
 });
 
+// POST /api/auth/login-delivery
+router.post('/login-delivery', async (req, res) => {
+  try {
+    let { mobile, password } = req.body;
+    if (!mobile) return res.status(400).json({ error: 'Mobile number required' });
+    if (!password) return res.status(400).json({ error: 'Password required' });
+
+    mobile = mobile.replace(/\D/g, '');
+
+    // Find delivery partner
+    const user = await User.findOne({ mobile, role: 'delivery_partner' });
+    if (!user) {
+      return res.status(404).json({ error: 'Delivery account not found.' });
+    }
+
+    if (!user.password || user.password !== password) {
+      return res.status(401).json({ error: 'Invalid password.' });
+    }
+
+    const token = generateToken(user);
+    res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id.toString(),
+        name: user.name,
+        mobile: user.mobile,
+        email: user.email,
+        role: user.role,
+        agentStatus: user.agentStatus || 'available',
+        activeDeliveries: user.activeDeliveries || 0
+      }
+    });
+  } catch (err) {
+    console.error('Login Delivery Error:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

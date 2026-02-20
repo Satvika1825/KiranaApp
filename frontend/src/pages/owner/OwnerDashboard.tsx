@@ -79,16 +79,44 @@ const OwnerDashboard = () => {
       ) : (
         <div className="space-y-2">
           {orders.slice(0, 5).map(order => (
-            <div key={order.id} className="kc-card-flat p-3 flex items-center justify-between">
+            <div key={order.id || order._id} className="kc-card-flat p-3 flex items-center justify-between">
               <div>
-                <p className="font-medium text-foreground text-sm">#{order.id.substring(0, 8)}</p>
+                <p className="font-medium text-foreground text-sm">#{(order.id || order._id).substring(0, 8)}</p>
                 <p className="text-xs text-muted-foreground">{order.customerName} · {order.items.length} items</p>
+                {/* Delivery Status */}
+                {order.deliveryStatus && order.deliveryStatus !== 'Pending' && (
+                  <p className="text-[10px] font-bold text-blue-600 mt-1">
+                    🚚 {order.deliveryStatus}
+                    {order.deliveryAgentId && <span className="text-gray-500 font-normal"> (Agent Assigned)</span>}
+                  </p>
+                )}
               </div>
-              <div className="text-right">
+              <div className="text-right flex flex-col items-end gap-1">
                 <p className="font-bold text-foreground text-sm">₹{order.totalPrice}</p>
                 <span className={`kc-status-${(order.status || 'New').toLowerCase().replace(/ /g, '-')}`}>
                   {order.status}
                 </span>
+
+                {/* Assign Button for Ready orders */}
+                {(order.status === 'Accepted' || order.status === 'Preparing') && (!order.deliveryAgentId) && (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      try {
+                        const owner = JSON.parse(localStorage.getItem('kc_owner') || '{}');
+                        await api.delivery.assignAgent(order._id || order.id, owner.id);
+                        // Refresh logic would go here, for now alert
+                        alert('Agent Assigned!');
+                        window.location.reload();
+                      } catch (err: any) {
+                        alert(err.message || 'Failed to assign');
+                      }
+                    }}
+                    className="text-[10px] bg-black text-white px-2 py-1 rounded"
+                  >
+                    Assign Agent
+                  </button>
+                )}
               </div>
             </div>
           ))}

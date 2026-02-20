@@ -71,7 +71,7 @@ export interface Order {
   shopOwnerId: string;
   items: CartItem[];
   totalPrice: number;
-  status: 'New' | 'Accepted' | 'Preparing' | 'Out for Delivery' | 'Delivered';
+  status: 'New' | 'Accepted' | 'Preparing' | 'Ready for Pickup' | 'Out for Delivery' | 'Delivered';
   createdAt: string;
 }
 

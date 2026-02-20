@@ -11,9 +11,10 @@ import { Package, CheckCircle2, Truck, ChefHat, ClipboardCheck, Receipt } from '
 const steps = [
   { status: 'New', label: 'Order Placed', icon: ClipboardCheck },
   { status: 'Accepted', label: 'Accepted', icon: CheckCircle2 },
-  { status: 'Preparing', label: 'Preparing', icon: ChefHat },
+  { status: 'Preparing', label: 'Packing', icon: ChefHat },
+  { status: 'Ready for Pickup', label: 'Ready for Pickup', icon: Package },
   { status: 'Out for Delivery', label: 'Out for Delivery', icon: Truck },
-  { status: 'Delivered', label: 'Delivered', icon: Package },
+  { status: 'Delivered', label: 'Delivered', icon: CheckCircle2 },
 ];
 
 const OrderTracking = () => {
@@ -93,6 +94,10 @@ const OrderTracking = () => {
                     {step.label}
                   </p>
                   {active && <p className="text-xs text-primary animate-pulse-soft">Current Status</p>}
+                  {/* Show agent name when assigned */}
+                  {step.status === 'Out for Delivery' && done && (order as any).deliveryAgentName && (
+                    <p className="text-xs text-blue-600 font-medium">🛵 Agent: {(order as any).deliveryAgentName}</p>
+                  )}
                 </div>
               </div>
             );

@@ -40,7 +40,7 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['New', 'Accepted', 'Preparing', 'Out for Delivery', 'Delivered'],
+    enum: ['New', 'Accepted', 'Preparing', 'Ready for Pickup', 'Out for Delivery', 'Delivered'],
     default: 'New'
   },
   paymentMethod: {
@@ -52,7 +52,48 @@ const orderSchema = new mongoose.Schema({
   createdAt: {
     type: String,
     default: () => new Date().toISOString()
-  }
+  },
+
+  // Denormalized shop info (for agent view)
+  shopName: { type: String, default: '' },
+  shopAddress: { type: String, default: '' },
+  shopLocation: {
+    lat: { type: Number, default: 0 },
+    lng: { type: Number, default: 0 }
+  },
+
+  // Customer drop location
+  customerAddress: {
+    text: { type: String, default: '' },
+    lat: { type: Number, default: 0 },
+    lng: { type: Number, default: 0 }
+  },
+
+  // COD confirmation by agent
+  codConfirmed: { type: Boolean, default: false },
+
+  // Status timeline for customer tracking
+  statusHistory: [{
+    status: String,
+    timestamp: { type: Date, default: Date.now }
+  }],
+
+  // Delivery batch clustering
+  deliveryBatchId: { type: String, default: null },
+
+  // Delivery Fields
+  deliveryAgentId: {
+    type: String,
+    default: null
+  },
+  deliveryAgentName: { type: String, default: '' },
+  deliveryStatus: {
+    type: String,
+    enum: ['Pending', 'Assigned', 'Picked Up', 'Out for Delivery', 'Delivered', 'Cancelled'],
+    default: 'Pending'
+  },
+  pickupTime: Date,
+  deliveryTime: Date
 });
 
 module.exports = mongoose.model('Order', orderSchema);

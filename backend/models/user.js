@@ -27,6 +27,20 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  // Delivery partner specific fields
+  agentStatus: {
+    type: String,
+    enum: ['available', 'busy', 'offline'],
+    default: 'available'
+  },
+  location: {
+    lat: { type: Number, default: 0 },
+    lng: { type: Number, default: 0 }
+  },
+  activeDeliveries: {
+    type: Number,
+    default: 0
   }
 }, {
   timestamps: true

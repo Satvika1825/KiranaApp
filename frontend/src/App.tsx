@@ -36,6 +36,10 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminSettings from "./pages/admin/AdminSettings";
 
+// Delivery Agent Pages
+import DeliveryLogin from "./pages/delivery-agent/DeliveryLogin";
+import DeliveryDashboard from "./pages/delivery-agent/DeliveryDashboard";
+
 // Layouts
 import OwnerLayout from "./components/OwnerLayout";
 import CustomerLayout from "./components/CustomerLayout";
@@ -79,20 +83,22 @@ const App = () => (
             <Route path="profile" element={<CustomerProfile />} />
             <Route path="saved-lists" element={<SavedLists />} />
           </Route>
-           {/* Admin Flow */}
-           <Route path="/admin/profile" element={<AdminProfile />} />
+          {/* Admin Flow */}
+          <Route path="/admin/profile" element={<AdminProfile />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminLayout />}>
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="stores" element={<AdminStores />} />
-          <Route path="owners" element={<AdminOwners />} />
-          <Route path="customers" element={<AdminCustomers />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="reports" element={<AdminReports />} />
-          <Route path="settings" element={<AdminSettings />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="stores" element={<AdminStores />} />
+            <Route path="owners" element={<AdminOwners />} />
+            <Route path="customers" element={<AdminCustomers />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="reports" element={<AdminReports />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
 
-
+          {/* Delivery Agent Flow */}
+          <Route path="/delivery/login" element={<DeliveryLogin />} />
+          <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

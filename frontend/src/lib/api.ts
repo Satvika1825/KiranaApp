@@ -237,6 +237,11 @@ export const api = {
             if (!res.ok) throw new Error('Failed to update order status');
             return res.json();
         },
+        getAll: async () => {
+            const res = await fetch(`${API_URL}/orders`);
+            if (!res.ok) throw new Error('Failed to fetch all orders');
+            return res.json();
+        },
     },
 
     // ============ CUSTOMER ============
@@ -277,4 +282,71 @@ export const api = {
             return res.json();
         },
     },
+
+    // ============ DELIVERY ============
+    delivery: {
+        login: async (mobile: string, password: string) => {
+            const res = await fetch(`${API_URL}/auth/login-delivery`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mobile, password }),
+            });
+            if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed to login'); }
+            return res.json();
+        },
+        getOrders: async (agentId: string) => {
+            const res = await fetch(`${API_URL}/delivery/orders?agentId=${agentId}`);
+            if (!res.ok) throw new Error('Failed to fetch orders');
+            return res.json();
+        },
+        getHistory: async (agentId: string) => {
+            const res = await fetch(`${API_URL}/delivery/history?agentId=${agentId}`);
+            if (!res.ok) throw new Error('Failed to fetch history');
+            return res.json();
+        },
+        updateStatus: async (orderId: string, status: string, agentId: string, codConfirmed?: boolean) => {
+            const res = await fetch(`${API_URL}/delivery/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId, status, agentId, codConfirmed }),
+            });
+            if (!res.ok) {
+                const d = await res.json();
+                throw new Error(d.error || 'Failed to update status');
+            }
+            return res.json();
+        },
+        updateAgentStatus: async (agentId: string, status: string, lat?: number, lng?: number) => {
+            const res = await fetch(`${API_URL}/delivery/agent-status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ agentId, status, lat, lng }),
+            });
+            if (!res.ok) throw new Error('Failed to update agent status');
+            return res.json();
+        },
+        autoAssign: async (orderId: string) => {
+            const res = await fetch(`${API_URL}/delivery/auto-assign`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId }),
+            });
+            if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Auto-assign failed'); }
+            return res.json();
+        },
+        assignAgent: async (orderId: string, agentId?: string) => {
+            const res = await fetch(`${API_URL}/delivery/assign`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ orderId, agentId }),
+            });
+            if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed to assign agent'); }
+            return res.json();
+        },
+        getAgents: async () => {
+            const res = await fetch(`${API_URL}/delivery/agents`);
+            if (!res.ok) throw new Error('Failed to fetch agents');
+            return res.json();
+        }
+    }
 };
