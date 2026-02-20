@@ -24,6 +24,17 @@ import CustomerOrders from "./pages/customer/CustomerOrders";
 import CustomerProfile from "./pages/customer/CustomerProfile";
 import SavedLists from "./pages/customer/SavedLists";
 import NotFound from "./pages/NotFound";
+// Admin Pages
+import AdminProfile from "./pages/admin/AdminProfile";
+import AdminLayout from "./components/AdminLayout";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminStores from "./pages/admin/AdminStores";
+import AdminCustomers from "./pages/admin/AdminCustomers";
+import AdminOwners from "./pages/admin/AdminOwners";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminReports from "./pages/admin/AdminReports";
+import AdminSettings from "./pages/admin/AdminSettings";
 
 // Layouts
 import OwnerLayout from "./components/OwnerLayout";
@@ -68,6 +79,20 @@ const App = () => (
             <Route path="profile" element={<CustomerProfile />} />
             <Route path="saved-lists" element={<SavedLists />} />
           </Route>
+           {/* Admin Flow */}
+           <Route path="/admin/profile" element={<AdminProfile />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminLayout />}>
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="stores" element={<AdminStores />} />
+          <Route path="owners" element={<AdminOwners />} />
+          <Route path="customers" element={<AdminCustomers />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="reports" element={<AdminReports />} />
+          <Route path="settings" element={<AdminSettings />} />
+          </Route>
+
+
 
           <Route path="*" element={<NotFound />} />
         </Routes>

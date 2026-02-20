@@ -159,3 +159,9 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-emerald-500;
   }
 }
+.glass-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+}
