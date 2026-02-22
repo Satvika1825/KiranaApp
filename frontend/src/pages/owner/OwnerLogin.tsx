@@ -7,7 +7,7 @@ import {
   generateId
 } from '@/lib/store';
 import { api } from '@/lib/api';
-import { syncService } from '@/lib/sync';
+
 
 const OwnerLogin = () => {
   const navigate = useNavigate();
@@ -82,7 +82,7 @@ const OwnerLogin = () => {
         password: '' // Don't store plain password locally
       });
 
-      await syncService.syncOwnerData();
+
       setStep('verified');
 
       setTimeout(() => navigate('/owner/shop-setup'), 1000);
@@ -126,7 +126,7 @@ const OwnerLogin = () => {
         password: ''
       });
 
-      await syncService.syncOwnerData();
+
       setStep('verified');
       setTimeout(() => navigate('/owner/dashboard'), 1000);
     } catch (err: any) {

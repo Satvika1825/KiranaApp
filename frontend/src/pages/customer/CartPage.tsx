@@ -5,7 +5,7 @@
  */
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getProducts, getCustomerProfile, type CartItem, saveCart } from '@/lib/store';
+import { getCustomerProfile, type CartItem } from '@/lib/store';
 import { api } from '@/lib/api';
 import { Plus, Minus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react';
 
@@ -14,33 +14,37 @@ const DELIVERY_CHARGE = 25;
 const CartPage = () => {
   const navigate = useNavigate();
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const customer = getCustomerProfile();
   const userId = customer?.id || 'guest';
-  const allProducts = getProducts(); // Need products to map back
 
-  useEffect(() => {
-    // Fetch cart from backend
-    api.cart.get(userId).then(data => {
+  const fetchCart = async () => {
+    try {
+      setLoading(true);
+      const data = await api.cart.get(userId);
       if (data && data.items) {
-        // Map backend items. If product not found in local store, use backend item details.
-        const mapped = data.items.map((item: any) => {
-          const localProduct = allProducts.find(p => p.id === item.productId);
-
-          // Construct a product object even if local lookup fails
-          const product = localProduct || {
+        const mapped = data.items.map((item: any) => ({
+          product: {
             id: item.productId,
-            name: item.name || 'Unknown Product',
-            price: item.price || 0,
-            shopOwnerId: item.shopOwnerId || '',
+            name: item.name,
+            price: item.price,
+            shopOwnerId: item.shopOwnerId,
             available: true,
-            category: 'Uncategorized'
-          };
-
-          return { product, quantity: item.quantity };
-        });
+            category: ''
+          },
+          quantity: item.quantity
+        }));
         setCart(mapped);
       }
-    }).catch(err => console.error('Failed to load cart', err));
+    } catch (err) {
+      console.error('Failed to load cart', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCart();
   }, [userId]);
 
   const updateCartBackend = (newCart: CartItem[]) => {
@@ -62,14 +66,12 @@ const CartPage = () => {
       return c;
     });
     setCart(updated);
-    saveCart(updated); // Keep local sync for now, though backend is source of truth
     updateCartBackend(updated);
   };
 
   const removeItem = (productId: string) => {
     const updated = cart.filter(c => c.product.id !== productId);
     setCart(updated);
-    saveCart(updated);
     updateCartBackend(updated);
   };
 

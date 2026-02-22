@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, ArrowRight, CheckCircle2 } from 'lucide-react';
 import { saveCustomerProfile, generateId } from '@/lib/store';
 import { api } from '@/lib/api';
-import { syncService } from '@/lib/sync';
+
 
 const CustomerLogin = () => {
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ const CustomerLogin = () => {
       // await api.customer.saveProfile({ userId, mobile, name }); // verifyOtp handles creation/update now
 
       // Trigger full sync
-      await syncService.syncCustomerData();
+
 
       setStep('verified');
       setTimeout(() => navigate('/customer/home'), 1000);
@@ -82,7 +82,7 @@ const CustomerLogin = () => {
         email: data.user.email
       });
 
-      await syncService.syncCustomerData();
+
       setStep('verified');
       setTimeout(() => navigate('/customer/home'), 1000);
     } catch (err: any) {

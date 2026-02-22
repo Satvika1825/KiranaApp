@@ -80,4 +80,50 @@ router.post('/profile', async (req, res) => {
   }
 });
 
+// POST /api/customer/saved-list
+router.post('/saved-list', async (req, res) => {
+  try {
+    const { userId, name, productIds } = req.body;
+    if (!userId) return res.status(400).json({ error: 'userId is required' });
+
+    let customer = await Customer.findOne({ userId });
+    if (!customer) {
+      customer = new Customer({ userId, mobile: '', addresses: [], savedLists: [] });
+    }
+
+    customer.savedLists.push({ name, productIds });
+    await customer.save();
+
+    res.json({ message: 'Saved list added', savedLists: customer.savedLists });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/customer/saved-lists/:userId
+router.get('/saved-lists/:userId', async (req, res) => {
+  try {
+    const customer = await Customer.findOne({ userId: req.params.userId });
+    res.json({ savedLists: customer ? customer.savedLists : [] });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /api/customer/saved-list/:userId/:listId
+router.delete('/saved-list/:userId/:listId', async (req, res) => {
+  try {
+    const customer = await Customer.findOne({ userId: req.params.userId });
+    if (!customer) return res.status(404).json({ error: 'Customer not found' });
+
+    customer.savedLists = customer.savedLists.filter(
+      (l) => l._id.toString() !== req.params.listId
+    );
+    await customer.save();
+    res.json({ message: 'Saved list removed', savedLists: customer.savedLists });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

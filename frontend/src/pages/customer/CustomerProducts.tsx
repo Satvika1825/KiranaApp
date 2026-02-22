@@ -6,8 +6,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  getCart,
-  saveCart,
   getCustomerProfile,
   type CartItem,
 } from '@/lib/store';
@@ -35,31 +33,34 @@ const CustomerProducts = () => {
 
   const [storeName, setStoreName] = useState('Store');
   const [allProducts, setAllProducts] = useState<any[]>([]);
-  const [cart, setCart] = useState<CartItem[]>(getCart());
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showToast, setShowToast] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [cartLoading, setCartLoading] = useState(false);
 
-  // Fetch store name and products from backend
+  // Fetch store name, products and cart from backend
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch store name
-        if (storeId) {
-          const storeData = await api.stores.getById(storeId);
-          if (storeData.store?.shopName) setStoreName(storeData.store.shopName);
-        } else if (ownerId) {
-          const storeData = await api.stores.getByOwner(ownerId);
-          if (storeData.store?.shopName) setStoreName(storeData.store.shopName);
-        }
+        // Fetch store name and products
+        const storePromise = storeId ? api.stores.getById(storeId) : (ownerId ? api.stores.getByOwner(ownerId) : Promise.resolve(null));
+        const productsPromise = api.products.getAll(ownerId || undefined);
+        const cartPromise = api.cart.get(userId);
 
-        // Fetch products for this specific store owner
-        const data = await api.products.getAll(ownerId || undefined);
-        if (data.products) {
-          const mapped = data.products.map((p: any) => ({
+        const [storeData, productsData, cartData] = await Promise.all([
+          storePromise,
+          productsPromise,
+          cartPromise
+        ]);
+
+        if (storeData?.store?.shopName) setStoreName(storeData.store.shopName);
+
+        if (productsData.products) {
+          const mapped = productsData.products.map((p: any) => ({
             id: p._id || p.id,
             shopOwnerId: p.shopOwnerId,
             name: p.name,
@@ -70,14 +71,29 @@ const CustomerProducts = () => {
           }));
           setAllProducts(mapped.filter((p: any) => p.available));
         }
+
+        if (cartData?.items) {
+          const mappedCart = cartData.items.map((item: any) => ({
+            product: {
+              id: item.productId,
+              name: item.name,
+              price: item.price,
+              shopOwnerId: item.shopOwnerId,
+              available: true,
+              category: ''
+            },
+            quantity: item.quantity
+          }));
+          setCart(mappedCart);
+        }
       } catch (err) {
-        console.error('Failed to fetch products:', err);
+        console.error('Failed to fetch data:', err);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [ownerId, storeId]);
+  }, [ownerId, storeId, userId]);
 
   const categories = useMemo(() => {
     const cats = [...new Set(allProducts.map(p => p.category))];
@@ -104,56 +120,52 @@ const CustomerProducts = () => {
       [id]: Math.max(1, qty),
     });
 
-  const addToCart = (productId: string) => {
-    const product = allProducts.find(
-      p => p.id === productId
-    );
+  const addToCart = async (productId: string) => {
+    const product = allProducts.find(p => p.id === productId);
     if (!product) return;
 
-    const existing = cart.find(
-      c => c.product.id === productId
-    );
+    setCartLoading(true);
+    try {
+      const existing = cart.find(c => c.product.id === productId);
+      let updated: CartItem[];
 
-    let updated: CartItem[];
+      if (existing) {
+        updated = cart.map(c =>
+          c.product.id === productId
+            ? { ...c, quantity: c.quantity + getQty(productId) }
+            : c
+        );
+      } else {
+        updated = [
+          ...cart,
+          { product, quantity: getQty(productId) },
+        ];
+      }
 
-    if (existing) {
-      updated = cart.map(c =>
-        c.product.id === productId
-          ? {
-            ...c,
-            quantity:
-              c.quantity + getQty(productId),
-          }
-          : c
-      );
-    } else {
-      updated = [
-        ...cart,
-        { product, quantity: getQty(productId) },
-      ];
+      setCart(updated);
+
+      // Sync to backend
+      const apiItems = updated.map(c => ({
+        productId: c.product.id,
+        quantity: c.quantity,
+        name: c.product.name,
+        price: c.product.price,
+        shopOwnerId: c.product.shopOwnerId
+      }));
+      await api.cart.update(userId, apiItems);
+
+      setQuantities({
+        ...quantities,
+        [productId]: 1,
+      });
+
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 1500);
+    } catch (err) {
+      console.error('Failed to update cart', err);
+    } finally {
+      setCartLoading(false);
     }
-
-    setCart(updated);
-    saveCart(updated);
-
-    // Sync to backend
-    const apiItems = updated.map(c => ({
-      productId: c.product.id,
-      quantity: c.quantity,
-      name: c.product.name,
-      price: c.product.price,
-      shopOwnerId: c.product.shopOwnerId
-    }));
-    api.cart.update(userId, apiItems).catch(() => { });
-
-    setQuantities({
-      ...quantities,
-      [productId]: 1,
-    });
-
-    // Toast animation
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 1500);
   };
 
   const cartCount = cart.reduce(

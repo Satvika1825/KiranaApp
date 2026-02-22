@@ -1,34 +1,66 @@
-/**
- * Shop Setup Page
- * Owner fills in shop details — saves to both localStorage and backend.
- */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store, MapPin, Clock, Camera } from 'lucide-react';
-import { saveShop, getOwnerProfile, getShop } from '@/lib/store';
+import { Store, MapPin, Clock, Camera, Loader2, AlertCircle } from 'lucide-react';
+import { getOwnerProfile } from '@/lib/store';
 import { api } from '@/lib/api';
-import { syncService } from '@/lib/sync';
 
 const ShopSetup = () => {
   const navigate = useNavigate();
   const owner = getOwnerProfile();
-  const existingShop = getShop();
 
   const [form, setForm] = useState({
-    shopName: existingShop?.shopName || '',
-    shopType: existingShop?.shopType || 'Kirana',
-    shopPhoto: existingShop?.shopPhoto || '',
-    houseNumber: existingShop?.address.houseNumber || '',
-    area: existingShop?.address.area || '',
-    landmark: existingShop?.address.landmark || '',
-    pinCode: existingShop?.address.pinCode || '',
-    gpsLocation: existingShop?.gpsLocation || '',
-    openingTime: existingShop?.openingTime || '07:00',
-    closingTime: existingShop?.closingTime || '21:00',
-    weeklyOff: existingShop?.weeklyOff || '',
+    shopName: '',
+    shopType: 'Kirana',
+    shopPhoto: '',
+    houseNumber: '',
+    area: '',
+    landmark: '',
+    pinCode: '',
+    gpsLocation: '',
+    openingTime: '07:00',
+    closingTime: '21:00',
+    weeklyOff: '',
   });
 
-  const [photoPreview, setPhotoPreview] = useState(existingShop?.shopPhoto || '');
+  const [photoPreview, setPhotoPreview] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchShop = async () => {
+      if (!owner?.id) {
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        const data = await api.stores.getById(owner.id); // Or getByOwner
+        const shop = data.store;
+        if (shop) {
+          setForm({
+            shopName: shop.shopName || '',
+            shopType: shop.shopType || 'Kirana',
+            shopPhoto: shop.shopPhoto || '',
+            houseNumber: shop.address?.houseNumber || '',
+            area: shop.address?.area || '',
+            landmark: shop.address?.landmark || '',
+            pinCode: shop.address?.pinCode || '',
+            gpsLocation: shop.gpsLocation || '',
+            openingTime: shop.openingTime || '07:00',
+            closingTime: shop.closingTime || '21:00',
+            weeklyOff: shop.weeklyOff || '',
+          });
+          setPhotoPreview(shop.shopPhoto || '');
+        }
+      } catch (err) {
+        console.error('Failed to fetch shop', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchShop();
+  }, [owner?.id]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -44,13 +76,15 @@ const ShopSetup = () => {
   };
 
   const handleDetectGPS = () => {
-    setForm({ ...form, gpsLocation: '12.9716° N, 77.5946° E' });
+    setForm({ ...form, gpsLocation: '12.9716, 77.5946' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.shopName || !form.area) return;
 
+    setSaving(true);
+    setError('');
     const shopData = {
       ownerId: owner?.id || 'owner1',
       shopName: form.shopName,
@@ -68,22 +102,24 @@ const ShopSetup = () => {
       weeklyOff: form.weeklyOff,
     };
 
-    // Save to localStorage
-    saveShop(shopData);
-
-    // Save to backend
     try {
       await api.stores.create(shopData);
-      console.log('Store synced to backend');
-    } catch {
-      console.log('Backend save failed, scheduling sync');
-      syncService.syncOwnerData();
+      navigate('/owner/dashboard');
+    } catch (err: any) {
+      setError(err.message || 'Failed to save shop details');
+    } finally {
+      setSaving(false);
     }
-
-    navigate('/owner/dashboard');
   };
 
   const update = (key: string, value: string) => setForm({ ...form, [key]: value });
+
+  if (loading) return (
+    <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+      <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      <p className="text-sm text-muted-foreground">Loading your shop details...</p>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background p-4 pb-8">

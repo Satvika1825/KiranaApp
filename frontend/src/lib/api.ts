@@ -281,6 +281,27 @@ export const api = {
             if (!res.ok) throw new Error('Failed to delete address');
             return res.json();
         },
+        getSavedLists: async (userId: string) => {
+            const res = await fetch(`${API_URL}/customer/saved-lists/${userId}`);
+            if (!res.ok) throw new Error('Failed to fetch saved lists');
+            return res.json();
+        },
+        addSavedList: async (data: { userId: string; name: string; productIds: string[] }) => {
+            const res = await fetch(`${API_URL}/customer/saved-list`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error('Failed to add saved list');
+            return res.json();
+        },
+        deleteSavedList: async (userId: string, listId: string) => {
+            const res = await fetch(`${API_URL}/customer/saved-list/${userId}/${listId}`, {
+                method: 'DELETE',
+            });
+            if (!res.ok) throw new Error('Failed to delete saved list');
+            return res.json();
+        },
     },
 
     // ============ DELIVERY ============

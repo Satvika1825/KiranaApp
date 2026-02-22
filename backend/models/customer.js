@@ -38,7 +38,12 @@ const customerSchema = new mongoose.Schema({
   walletBalance: {
     type: Number,
     default: 0
-  }
+  },
+  savedLists: [{
+    name: String,
+    productIds: [String],
+    createdAt: { type: Date, default: Date.now }
+  }]
 }, {
   timestamps: true
 });
