@@ -59,60 +59,57 @@ const AdminCustomers = () => {
         </button>
       </div>
 
-      <div className="admin-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="text-left px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Name</th>
-                <th className="text-left px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Mobile</th>
-                <th className="text-left px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Email</th>
-                <th className="text-left px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Total Orders</th>
-                <th className="text-left px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Joined</th>
-                <th className="text-left px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Status</th>
-                <th className="text-right px-6 py-3 font-semibold text-gray-600 text-xs uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {customers.length === 0 ? (
-                <tr><td colSpan={7} className="text-center py-12 text-gray-400">No customers yet</td></tr>
-              ) : (
-                customers.map((c: any) => {
-                  const cid = c._id || c.id;
-                  const isBlocked = !c.isActive;
-                  return (
-                    <tr key={cid} className="border-t border-gray-50 hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-gray-900">{c.name || '—'}</td>
-                      <td className="px-6 py-4 text-gray-600">{c.mobile}</td>
-                      <td className="px-6 py-4 text-gray-500 text-xs">{c.email || '—'}</td>
-                      <td className="px-6 py-4 text-gray-600">{c.totalOrders}</td>
-                      <td className="px-6 py-4 text-gray-500 text-xs">
-                        {c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Recently'}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={isBlocked ? 'admin-badge-suspended' : 'admin-badge-active'}>
-                          {isBlocked ? 'Blocked' : 'Active'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <button
-                          onClick={() => setConfirm({ customer: c, action: isBlocked ? 'Unblock' : 'Block' })}
-                          className={`text-xs font-semibold px-4 py-2 rounded-lg transition-all ${isBlocked
-                              ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
-                              : 'bg-red-50 text-red-700 hover:bg-red-100'
-                            }`}
-                        >
-                          {isBlocked ? 'Unblock' : 'Block'}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+      {customers.length === 0 ? (
+        <div className="text-center py-16 text-gray-400">No customers yet</div>
+      ) : (
+        <div className="flex flex-wrap gap-4">
+          {customers.map((c: any) => {
+            const cid = c._id || c.id;
+            const isBlocked = !c.isActive;
+            const initials = (c.name || c.mobile || '?').charAt(0).toUpperCase();
+            return (
+              <div
+                key={cid}
+                className="admin-card flex flex-col gap-3 p-5 w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(33.333%-0.75rem)] hover:shadow-md transition-shadow"
+              >
+                {/* Avatar + Name + Status */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg flex-shrink-0">
+                    {initials}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">{c.name || '—'}</p>
+                    <p className="text-xs text-gray-500 truncate">{c.mobile}</p>
+                  </div>
+                  <span className={isBlocked ? 'admin-badge-suspended' : 'admin-badge-active'}>
+                    {isBlocked ? 'Blocked' : 'Active'}
+                  </span>
+                </div>
+
+                {/* Details */}
+                <div className="text-xs text-gray-500 space-y-1">
+                  <p><span className="font-medium text-gray-700">Email:</span> {c.email || '—'}</p>
+                  <p><span className="font-medium text-gray-700">Orders:</span> {c.totalOrders ?? 0}</p>
+                  <p><span className="font-medium text-gray-700">Joined:</span> {c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Recently'}</p>
+                </div>
+
+                {/* Action */}
+                <div className="mt-auto pt-2 border-t border-gray-100">
+                  <button
+                    onClick={() => setConfirm({ customer: c, action: isBlocked ? 'Unblock' : 'Block' })}
+                    className={`w-full text-xs font-semibold px-4 py-2 rounded-lg transition-all ${isBlocked
+                        ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100'
+                        : 'bg-red-50 text-red-700 hover:bg-red-100'
+                      }`}
+                  >
+                    {isBlocked ? 'Unblock' : 'Block'}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </div>
+      )}
 
       {confirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">

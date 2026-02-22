@@ -1,27 +1,55 @@
-/**
- * Owner Profile Page
- * Editable: Full Name, Email, Shop Details, Timings.
- */
-import { useState } from 'react';
-import { getOwnerProfile, saveOwnerProfile, getShop, saveShop } from '@/lib/store';
+import { useState, useEffect } from 'react';
+import { getOwnerProfile, saveOwnerProfile } from '@/lib/store';
 import { api } from '@/lib/api';
-import { User, Store, Clock, Check } from 'lucide-react';
+import { User, Store, Clock, Check, Loader2, AlertCircle } from 'lucide-react';
 
 const OwnerProfile = () => {
   const owner = getOwnerProfile();
-  const shop = getShop();
+  const ownerId = owner?.id || '';
 
   const [form, setForm] = useState({
     fullName: owner?.fullName || '',
     email: owner?.email || '',
-    shopName: shop?.shopName || '',
-    shopType: shop?.shopType || 'Kirana',
-    openingTime: shop?.openingTime || '07:00',
-    closingTime: shop?.closingTime || '21:00',
+    shopName: '',
+    shopType: 'Kirana',
+    openingTime: '07:00',
+    closingTime: '21:00',
   });
+
+  const [shop, setShop] = useState<any>(null);
+  const [fetching, setFetching] = useState(true);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+
+  // Fetch shop data on mount
+  useEffect(() => {
+    const fetchShop = async () => {
+      if (!ownerId) {
+        setFetching(false);
+        return;
+      }
+      try {
+        const data = await api.stores.getByOwner(ownerId);
+        if (data.store) {
+          setShop(data.store);
+          setForm(prev => ({
+            ...prev,
+            shopName: data.store.shopName || '',
+            shopType: data.store.shopType || 'Kirana',
+            openingTime: data.store.openingTime || '07:00',
+            closingTime: data.store.closingTime || '21:00',
+          }));
+        }
+      } catch (err) {
+        console.error('Failed to fetch shop:', err);
+        setError('Could not load shop details');
+      } finally {
+        setFetching(false);
+      }
+    };
+    fetchShop();
+  }, [ownerId]);
 
   const handleSave = async () => {
     setLoading(true);
@@ -29,38 +57,31 @@ const OwnerProfile = () => {
     setSaved(false);
 
     try {
-      // 1. Update Owner Info (Name, Email) - re-uses register endpoint for updates
+      // 1. Update Owner Info (Name, Email)
       if (owner) {
         const updatedOwner = await api.auth.registerOwner({
           fullName: form.fullName,
           email: form.email,
-          mobile: owner.mobile, // keep existing mobile
-          password: '' // not updating password here
+          mobile: owner.mobile,
+          password: ''
         });
-
-        // Update local storage with new owner details
         saveOwnerProfile({ ...owner, fullName: updatedOwner.user.fullName, email: updatedOwner.user.email });
       }
 
       // 2. Update Shop Details
-      if (shop) {
-        const updatedShop = await api.stores.create({
-          ownerId: owner?.id,
-          shopName: form.shopName,
-          shopType: form.shopType,
-          openingTime: form.openingTime,
-          closingTime: form.closingTime,
-          // Preserve other shop fields
-          shopPhoto: shop.shopPhoto,
-          address: shop.address,
-          gpsLocation: shop.gpsLocation,
-          weeklyOff: shop.weeklyOff
-        });
+      const updatedShop = await api.stores.create({
+        ownerId,
+        shopName: form.shopName,
+        shopType: form.shopType,
+        openingTime: form.openingTime,
+        closingTime: form.closingTime,
+        shopPhoto: shop?.shopPhoto || '',
+        address: shop?.address || { houseNumber: '', area: '', landmark: '', pinCode: '' },
+        gpsLocation: shop?.gpsLocation || '',
+        weeklyOff: shop?.weeklyOff || ''
+      });
 
-        // Update local storage with new shop details
-        saveShop(updatedShop.store);
-      }
-
+      setShop(updatedShop.store);
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err: any) {
@@ -73,13 +94,23 @@ const OwnerProfile = () => {
 
   const update = (key: string, value: string) => setForm({ ...form, [key]: value });
 
+  if (fetching) {
+    return (
+      <div className="flex flex-col items-center justify-center p-20 gap-3">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+        <p className="text-sm text-muted-foreground font-medium">Loading profile...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="pb-20 lg:pb-0 animate-fade-in max-w-lg">
       <h2 className="text-xl font-heading font-bold text-foreground mb-4">Profile</h2>
 
       <div className="space-y-4">
         {error && (
-          <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg border border-destructive/20">
+          <div className="bg-destructive/10 text-destructive text-sm p-3 rounded-lg border border-destructive/20 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4" />
             {error}
           </div>
         )}
@@ -121,6 +152,9 @@ const OwnerProfile = () => {
               <option>Kirana</option>
               <option>General Store</option>
               <option>Provision Store</option>
+              <option>Bakery</option>
+              <option>Pharmacy</option>
+              <option>Supermarket</option>
             </select>
           </div>
         </div>
@@ -148,7 +182,13 @@ const OwnerProfile = () => {
           disabled={loading}
           className="w-full bg-primary text-primary-foreground py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2 disabled:opacity-70"
         >
-          {loading ? 'Saving...' : saved ? <><Check className="w-4 h-4" /> Saved!</> : 'Save Changes'}
+          {loading ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Saving...</>
+          ) : saved ? (
+            <><Check className="w-4 h-4" /> Saved!</>
+          ) : (
+            'Save Changes'
+          )}
         </button>
       </div>
     </div>
