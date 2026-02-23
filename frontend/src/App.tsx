@@ -23,6 +23,7 @@ import OrderTracking from "./pages/customer/OrderTracking";
 import CustomerOrders from "./pages/customer/CustomerOrders";
 import CustomerProfile from "./pages/customer/CustomerProfile";
 import SavedLists from "./pages/customer/SavedLists";
+import UploadList from "./pages/customer/UploadList";
 import NotFound from "./pages/NotFound";
 // Admin Pages
 import AdminProfile from "./pages/admin/AdminProfile";
@@ -82,6 +83,7 @@ const App = () => (
             <Route path="orders" element={<CustomerOrders />} />
             <Route path="profile" element={<CustomerProfile />} />
             <Route path="saved-lists" element={<SavedLists />} />
+            <Route path="upload-list" element={<UploadList />} />
           </Route>
           {/* Admin Flow */}
           <Route path="/admin/profile" element={<AdminProfile />} />

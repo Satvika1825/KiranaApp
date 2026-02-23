@@ -238,7 +238,10 @@ export const api = {
             return res.json();
         },
         getAll: async () => {
-            const res = await fetch(`${API_URL}/orders`);
+            const token = JSON.parse(localStorage.getItem('kc_session') || '{}').token;
+            const res = await fetch(`${API_URL}/orders`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
             if (!res.ok) throw new Error('Failed to fetch all orders');
             return res.json();
         },
@@ -398,12 +401,18 @@ export const api = {
             return res.json();
         },
         getStats: async () => {
-            const res = await fetch(`${API_URL}/admin/stats`);
+            const token = JSON.parse(localStorage.getItem('kc_session') || '{}').token;
+            const res = await fetch(`${API_URL}/admin/stats`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
             if (!res.ok) throw new Error('Failed to fetch stats');
             return res.json();
         },
         getCustomers: async () => {
-            const res = await fetch(`${API_URL}/admin/customers`);
+            const token = JSON.parse(localStorage.getItem('kc_session') || '{}').token;
+            const res = await fetch(`${API_URL}/admin/customers`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
             if (!res.ok) throw new Error('Failed to fetch customers');
             return res.json();
         },

@@ -22,22 +22,22 @@ router.post('/catalog/seed', async (req, res) => {
   try {
     const items = [
       // Grains & Staples
-      { id: 'cat-rice-001', name: 'Basmati Rice', category: 'Grains', defaultPrice: 120, unit: '1 kg' },
-      { id: 'cat-rice-002', name: 'Sona Masoori Rice', category: 'Grains', defaultPrice: 80, unit: '1 kg' },
-      { id: 'cat-wheat-001', name: 'Wheat Flour (Atta)', category: 'Grains', defaultPrice: 55, unit: '1 kg' },
-      { id: 'cat-dal-001', name: 'Toor Dal', category: 'Grains', defaultPrice: 130, unit: '1 kg' },
-      { id: 'cat-dal-002', name: 'Moong Dal', category: 'Grains', defaultPrice: 100, unit: '500 g' },
-      { id: 'cat-dal-003', name: 'Chana Dal', category: 'Grains', defaultPrice: 90, unit: '1 kg' },
-      { id: 'cat-sugar-001', name: 'Sugar', category: 'Grains', defaultPrice: 45, unit: '1 kg' },
-      { id: 'cat-salt-001', name: 'Iodized Salt', category: 'Grains', defaultPrice: 20, unit: '1 kg' },
+      { id: 'cat-rice-001', name: 'Basmati Rice', category: 'Grains', defaultPrice: 120, unit: '1 kg', image: '/images/basmathi.png' },
+      { id: 'cat-rice-002', name: 'Sona Masoori Rice', category: 'Grains', defaultPrice: 80, unit: '1 kg', image: '/images/rice.png' },
+      { id: 'cat-wheat-001', name: 'Wheat Flour (Atta)', category: 'Grains', defaultPrice: 55, unit: '1 kg', image: '/images/wheat.png' },
+      { id: 'cat-dal-001', name: 'Toor Dal', category: 'Grains', defaultPrice: 130, unit: '1 kg', image: '/images/pulses.png' },
+      { id: 'cat-dal-002', name: 'Moong Dal', category: 'Grains', defaultPrice: 100, unit: '500 g', image: '/images/dal.png' },
+      { id: 'cat-dal-003', name: 'Chana Dal', category: 'Grains', defaultPrice: 90, unit: '1 kg', image: '/images/pulses.png' },
+      { id: 'cat-sugar-001', name: 'Sugar', category: 'Grains', defaultPrice: 45, unit: '1 kg', image: '/images/sugar.png' },
+      { id: 'cat-salt-001', name: 'Iodized Salt', category: 'Grains', defaultPrice: 20, unit: '1 kg', image: '/images/salt.png' },
       // Dairy
       { id: 'cat-milk-001', name: 'Full Cream Milk', category: 'Dairy', defaultPrice: 28, unit: '500 ml' },
-      { id: 'cat-curd-001', name: 'Fresh Curd', category: 'Dairy', defaultPrice: 30, unit: '200 g' },
-      { id: 'cat-butter-001', name: 'Amul Butter', category: 'Dairy', defaultPrice: 55, unit: '100 g' },
-      { id: 'cat-paneer-001', name: 'Paneer', category: 'Dairy', defaultPrice: 80, unit: '200 g' },
+      { id: 'cat-curd-001', name: 'Fresh Curd', category: 'Dairy', defaultPrice: 30, unit: '200 g', image: '/images/dairy.png' },
+      { id: 'cat-butter-001', name: 'Amul Butter', category: 'Dairy', defaultPrice: 55, unit: '100 g', image: '/images/amulbutter.png' },
+      { id: 'cat-paneer-001', name: 'Paneer', category: 'Dairy', defaultPrice: 80, unit: '200 g', image: '/images/dairy.png' },
       // Beverages
-      { id: 'cat-tea-001', name: 'Tata Tea', category: 'Beverages', defaultPrice: 70, unit: '250 g' },
-      { id: 'cat-coffee-001', name: 'Nescafe Coffee', category: 'Beverages', defaultPrice: 90, unit: '50 g' },
+      { id: 'cat-tea-001', name: 'Tata Tea', category: 'Beverages', defaultPrice: 70, unit: '250 g', image: '/images/tea.png' },
+      { id: 'cat-coffee-001', name: 'Nescafe Coffee', category: 'Beverages', defaultPrice: 90, unit: '50 g', image: '/images/coffee.png' },
       { id: 'cat-water-001', name: 'Bisleri Water', category: 'Beverages', defaultPrice: 20, unit: '1 L' },
       { id: 'cat-juice-001', name: 'Real Orange Juice', category: 'Beverages', defaultPrice: 85, unit: '1 L' },
       // Snacks
@@ -46,14 +46,14 @@ router.post('/catalog/seed', async (req, res) => {
       { id: 'cat-namkeen-001', name: 'Haldiram Namkeen', category: 'Snacks', defaultPrice: 50, unit: '200 g' },
       { id: 'cat-bread-001', name: 'Bread Loaf', category: 'Snacks', defaultPrice: 35, unit: '400 g' },
       // Oils & Spices
-      { id: 'cat-oil-001', name: 'Sunflower Oil', category: 'Oils & Spices', defaultPrice: 130, unit: '1 L' },
-      { id: 'cat-oil-002', name: 'Mustard Oil', category: 'Oils & Spices', defaultPrice: 140, unit: '1 L' },
+      { id: 'cat-oil-001', name: 'Sunflower Oil', category: 'Oils & Spices', defaultPrice: 130, unit: '1 L', image: '/images/sunflower.png' },
+      { id: 'cat-oil-002', name: 'Mustard Oil', category: 'Oils & Spices', defaultPrice: 140, unit: '1 L', image: '/images/oil.png' },
       { id: 'cat-chilli-001', name: 'Red Chilli Powder', category: 'Oils & Spices', defaultPrice: 60, unit: '100 g' },
       { id: 'cat-turmeric-001', name: 'Turmeric Powder', category: 'Oils & Spices', defaultPrice: 40, unit: '100 g' },
       { id: 'cat-garam-001', name: 'Garam Masala', category: 'Oils & Spices', defaultPrice: 55, unit: '100 g' },
       // Cleaning
-      { id: 'cat-soap-001', name: 'Lifebuoy Soap', category: 'Cleaning', defaultPrice: 35, unit: '100 g' },
-      { id: 'cat-detergent-001', name: 'Ariel Powder', category: 'Cleaning', defaultPrice: 120, unit: '500 g' },
+      { id: 'cat-soap-001', name: 'Lifebuoy Soap', category: 'Cleaning', defaultPrice: 35, unit: '100 g', image: '/images/soaps.png' },
+      { id: 'cat-detergent-001', name: 'Ariel Powder', category: 'Cleaning', defaultPrice: 120, unit: '500 g', image: '/images/shampoo.png' },
       { id: 'cat-dishwash-001', name: 'Vim Bar', category: 'Cleaning', defaultPrice: 25, unit: '200 g' },
       // Personal Care
       { id: 'cat-shampoo-001', name: 'Head & Shoulders', category: 'Personal Care', defaultPrice: 90, unit: '180 ml' },
@@ -64,7 +64,7 @@ router.post('/catalog/seed', async (req, res) => {
     for (const item of items) {
       await CatalogProduct.findOneAndUpdate(
         { id: item.id },
-        { $setOnInsert: item },
+        { $set: item },
         { upsert: true }
       );
       seeded++;

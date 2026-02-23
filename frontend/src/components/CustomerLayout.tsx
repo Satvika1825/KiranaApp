@@ -1,160 +1,123 @@
-import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { ShoppingBag, ShoppingCart, Bell, Store, ArrowLeft, Home, Package, User, Loader2 } from 'lucide-react';
-import { getCustomerProfile } from '@/lib/store';
-import { api } from '@/lib/api';
+import { useNavigate, useLocation, Outlet, Link } from "react-router-dom";
+import {
+  Bell,
+  Home,
+  ShoppingBag,
+  User,
+  ClipboardList,
+  Heart,
+  ShoppingBasket,
+  MapPin,
+  ChevronDown
+} from "lucide-react";
+import { getCustomerProfile, getOrders, getCart } from "@/lib/store";
 
 const CustomerLayout = () => {
-  const location = useLocation();
   const navigate = useNavigate();
+  const location = useLocation();
   const customer = getCustomerProfile();
-  const userId = customer?.id || '';
+  const customerName = customer?.name || "Sathwika";
 
-  const [cartCount, setCartCount] = useState(0);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [showNotifs, setShowNotifs] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const fetchLayoutData = async () => {
-    if (!userId) return;
-    try {
-      const [cartData, notifData] = await Promise.all([
-        api.cart.get(userId).catch(() => ({ items: [] })),
-        // api.customer.getNotifications(userId).catch(() => ({ notifications: [] })) // Uncomment if backend ready
-        Promise.resolve({ notifications: [] })
-      ]);
-
-      const count = (cartData.items || []).reduce((s: number, c: any) => s + c.quantity, 0);
-      setCartCount(count);
-      setNotifications(notifData.notifications || []);
-      setUnreadCount((notifData.notifications || []).filter((n: any) => !n.read).length);
-    } catch (err) {
-      console.error('Failed to fetch layout data', err);
-    }
-  };
-
-  useEffect(() => {
-    fetchLayoutData();
-    // Poll for layout updates (cart/notifs) every 15s
-    const interval = setInterval(fetchLayoutData, 15000);
-    return () => clearInterval(interval);
-  }, [userId, location.pathname]);
-
-  const handleNotifClick = () => {
-    setShowNotifs(!showNotifs);
-    // if (!showNotifs) api.customer.markNotifsRead(userId).then(() => setUnreadCount(0)); 
-  };
-
-  const showBack = location.pathname !== '/customer/home' && location.pathname !== '/customer/stores';
+  const cart = getCart() || [];
+  const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+  const orders = getOrders() || [];
+  const activeOrdersCount = orders.filter(o => o.status !== "Delivered").length;
 
   const navItems = [
-    { path: '/customer/home', label: 'Home', icon: Home },
-    { path: '/customer/stores', label: 'Stores', icon: Store },
-    { path: '/customer/cart', label: 'Cart', icon: ShoppingCart, badge: cartCount },
-    { path: '/customer/orders', label: 'Orders', icon: Package },
-    { path: '/customer/profile', label: 'Profile', icon: User },
+    { icon: Home, label: "Home", path: "/customer/home", color: "text-emerald-600", bg: "bg-emerald-50" },
+    { icon: ShoppingBasket, label: "Stores", path: "/customer/stores", color: "text-blue-600", bg: "bg-blue-50" },
+    { icon: ShoppingBag, label: "Cart", path: "/customer/cart", count: cartCount, color: "text-orange-600", bg: "bg-orange-50" },
+    { icon: ClipboardList, label: "Orders", path: "/customer/orders", color: "text-purple-600", bg: "bg-purple-50" },
+    { icon: Heart, label: "Favourites", path: "/customer/saved-lists", color: "text-rose-600", bg: "bg-rose-50" },
+    { icon: User, label: "Profile", path: "/customer/profile", color: "text-gray-600", bg: "bg-gray-100" },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#f8fafc] pb-20 lg:pb-0 font-sans">
+      {/* ═══════════════════ FINAL POLISHED HEADER ═══════════════════ */}
+      <header className="sticky top-0 z-50 w-full bg-white shadow-sm border-b border-gray-100 px-4 py-3 md:px-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
 
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-20 bg-card border-b px-4 lg:px-10 py-3.5 flex items-center justify-between w-full shadow-sm">
-        <div className="flex items-center gap-3">
-          {showBack && (
-            <button onClick={() => navigate(-1)} className="p-1.5 hover:bg-muted rounded-full text-foreground transition-colors">
-              <ArrowLeft className="w-5 h-5" />
+          {/* Left: Personalized Greeting & ENLARGED Location */}
+          <div className="flex flex-col">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900 leading-tight">
+              Welcome, {customerName} 👋
+            </h1>
+            <button className="flex items-center gap-2 mt-1 text-[#16a34a] font-bold text-sm md:text-base hover:opacity-80 transition-opacity">
+              <MapPin className="w-4 h-4 md:w-5 h-5" />
+              <span>Hyderabad, Banjara Hills</span>
+              <ChevronDown className="w-4 h-4 md:w-5 h-5" />
             </button>
-          )}
-          <Link to="/customer/home" className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-primary/10 rounded-xl flex items-center justify-center">
-              <ShoppingBag className="w-5 h-5 text-primary" />
-            </div>
-            <span className="font-heading font-bold text-lg text-foreground tracking-tight hidden sm:inline">KiranaConnect</span>
-          </Link>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex items-center gap-1.5 sm:gap-3">
-          {navItems.map((item, i) => {
-            const isActive =
-              location.pathname === item.path ||
-              (item.label === 'Orders' && location.pathname.startsWith('/customer/order'));
-
-            return (
-              <Link
-                key={i}
-                to={item.path}
-                className={`relative flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-all ${isActive
-                    ? 'text-primary bg-primary/5'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                  }`}
-              >
-                <item.icon className={`w-4 h-4 ${isActive ? 'stroke-[2.5px]' : ''}`} />
-                <span className="hidden lg:inline">{item.label}</span>
-
-                {item.badge && item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 border-2 border-card shadow-sm">
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-
-          <div className="w-px h-6 bg-border mx-1 hidden sm:block" />
-
-          {/* Notifications */}
-          <div className="relative">
-            <button
-              onClick={handleNotifClick}
-              className={`relative p-2.5 rounded-xl transition-all ${showNotifs ? 'bg-primary/5 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted'}`}
-            >
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute top-2 right-2 bg-destructive text-white text-[8px] font-bold rounded-full w-2 h-2 border border-card" />
-              )}
-            </button>
-
-            {showNotifs && (
-              <div className="absolute right-0 mt-3 w-80 bg-card border border-border rounded-2xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-3 duration-200">
-                <div className="p-4 border-b bg-muted/30 flex items-center justify-between">
-                  <span className="font-heading font-bold text-sm">Notifications</span>
-                  {unreadCount > 0 && <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">{unreadCount} New</span>}
-                </div>
-
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="p-8 text-center">
-                      <Bell className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                      <p className="text-xs text-muted-foreground font-medium">No new notifications</p>
-                    </div>
-                  ) : (
-                    notifications.map(n => (
-                      <div
-                        key={n.id}
-                        className={`p-4 border-b last:border-0 hover:bg-muted/30 transition-colors ${!n.read ? 'bg-primary/5' : ''}`}
-                      >
-                        <p className="text-sm font-medium text-foreground">{n.message}</p>
-                        <span className="block text-[10px] text-muted-foreground mt-1.5 font-medium uppercase tracking-wider">
-                          {new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
           </div>
-        </nav>
+
+          {/* Right: Tightly Grouped Navigation & Notifications */}
+          <div className="flex items-center gap-0.5 md:gap-1">
+            {/* Desktop Nav Items */}
+            <div className="hidden lg:flex items-center gap-0.5">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.label}
+                    to={item.path}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${isActive
+                      ? `${item.bg} ${item.color} shadow-sm`
+                      : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                      }`}
+                  >
+                    <item.icon className={`w-4 h-4 ${isActive ? item.color : 'text-gray-400'}`} />
+                    <span>{item.label}</span>
+                    {/* Cart Badge hidden as per user request */}
+                    {/* {item.count !== undefined && item.count > 0 && (
+                      <span className="ml-0.5 px-1.5 py-0.5 bg-red-500 text-white text-[10px] rounded-full">
+                        {item.count}
+                      </span>
+                    )} */}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Notification Bell (TIGHTLY Grouped) */}
+            <div className="flex items-center border-l border-gray-100 ml-1 pl-1">
+              <button className="relative p-2.5 text-gray-400 hover:text-gray-900 hover:bg-gray-50 rounded-full transition-all group">
+                <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+                {activeOrdersCount > 0 && (
+                  <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full shadow-sm" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       </header>
 
-      {/* Main Content */}
-      <main className="w-full px-4 lg:px-10 py-6 md:py-8 lg:py-10 max-w-7xl mx-auto">
+      {/* ═══════════════════ MAIN CONTENT ═══════════════════ */}
+      <main className="max-w-full overflow-x-hidden">
         <Outlet />
       </main>
 
+      {/* ═══════════════════ MOBILE BOTTOM NAVIGATION ═══════════════════ */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-100 flex items-center justify-around py-2 px-1 lg:hidden z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+        {navItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <button
+              key={item.label}
+              onClick={() => navigate(item.path)}
+              className={`flex flex-col items-center gap-1 flex-1 py-1 transition-all relative ${isActive ? item.color : "text-gray-400"
+                }`}
+            >
+              <item.icon className={`w-5 h-5 ${isActive ? "stroke-[2.5px]" : "stroke-[2px]"}`} />
+              <span className={`text-[10px] font-bold ${isActive ? "" : "text-gray-400 opacity-60"}`}>
+                {item.label}
+              </span>
+              {isActive && (
+                <div className={`absolute top-0 w-8 h-0.5 ${item.color.replace('text-', 'bg-')} rounded-full`} />
+              )}
+            </button>
+          );
+        })}
+      </nav>
     </div>
   );
 };
