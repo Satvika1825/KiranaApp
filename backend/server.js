@@ -26,20 +26,29 @@ app.use(cors({
 
 app.use(express.json({ limit: '10mb' }));
 
-// Connect MongoDB
-mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('MongoDB connected'))
-    .catch((err) => console.error(err));
+// Startup logic
+async function startServer() {
+    try {
+        console.log('Connecting to MongoDB...');
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log('MongoDB connected');
 
-// Routes
-app.use('/api/auth', require('./API/auth'));
-app.use('/api/admin', require('./API/admin'));
-app.use('/api/customer', require('./API/customer'));
-app.use('/api/stores', require('./API/store'));
-app.use('/api/products', require('./API/product'));
-app.use('/api/cart', require('./API/cart'));
-app.use('/api/orders', require('./API/order'));
-app.use('/api/delivery', require('./API/delivery'));
+        // Routes - Load AFTER DB connection
+        app.use('/api/auth', require('./API/auth'));
+        app.use('/api/admin', require('./API/admin'));
+        app.use('/api/customer', require('./API/customer'));
+        app.use('/api/stores', require('./API/store'));
+        app.use('/api/products', require('./API/product'));
+        app.use('/api/cart', require('./API/cart'));
+        app.use('/api/orders', require('./API/order'));
+        app.use('/api/delivery', require('./API/delivery'));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+        const PORT = process.env.PORT || 5000;
+        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+    } catch (err) {
+        console.error('Failed to start server:', err.message);
+        process.exit(1);
+    }
+}
+
+startServer();

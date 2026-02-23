@@ -302,6 +302,21 @@ export const api = {
             if (!res.ok) throw new Error('Failed to delete saved list');
             return res.json();
         },
+        uploadGroceryList: async (ownerId: string, image: File) => {
+            const formData = new FormData();
+            formData.append('ownerId', ownerId);
+            formData.append('listImage', image);
+
+            const res = await fetch(`${API_URL}/customer/upload-list`, {
+                method: 'POST',
+                body: formData,
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to process grocery list');
+            }
+            return res.json();
+        },
     },
 
     // ============ DELIVERY ============
