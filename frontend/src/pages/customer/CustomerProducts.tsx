@@ -3,7 +3,7 @@
  * Fetches products from backend API for a specific store (ownerId from URL).
  * Add to cart syncs to backend.
  */
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   getCustomerProfile,
@@ -20,6 +20,7 @@ import {
   ArrowLeft,
   Camera,
   Store,
+  Upload,
 } from 'lucide-react';
 import GroceryListModal from '@/components/customer/GroceryListModal';
 
@@ -46,6 +47,11 @@ const CustomerProducts = () => {
   const [loading, setLoading] = useState(true);
   const [cartLoading, setCartLoading] = useState(false);
   const [isListModalOpen, setIsListModalOpen] = useState(false);
+  const productsRef = useRef<HTMLDivElement>(null);
+
+  const scrollToProducts = () => {
+    productsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
 
   // Fetch store name, products and cart from backend
@@ -230,7 +236,7 @@ const CustomerProducts = () => {
   );
 
   return (
-    <div className="w-full min-h-screen bg-background animate-fade-in relative pb-20">
+    <div className="w-full h-screen bg-background animate-fade-in relative pb-20 overflow-y-auto">
       {/* Store Banner */}
       <div className="relative w-full h-48 md:h-64 overflow-hidden bg-muted">
         {storePhoto ? (
@@ -265,12 +271,28 @@ const CustomerProducts = () => {
           </button>
         )}
 
-        {/* Store Name Overlay */}
-        <div className="absolute bottom-6 left-6 text-white">
+        {/* Store Name and Action Buttons Overlay */}
+        <div className="absolute bottom-4 left-4 right-4 text-white z-10">
           <h2 className="text-2xl md:text-3xl font-bold mb-1 drop-shadow-md">{storeName}</h2>
-          <p className="text-sm opacity-90 drop-shadow-sm font-medium">
+          <p className="text-sm opacity-90 drop-shadow-sm font-medium mb-2">
             {loading ? 'Loading...' : `${products.length} products available`}
           </p>
+          <div className="flex gap-2">
+            <button
+              onClick={scrollToProducts}
+              className="flex items-center justify-center gap-1 px-3 py-2 bg-primary text-white rounded-md font-semibold text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/60 hover:shadow-primary/100 hover:scale-105 animate-pulse"
+            >
+              <Search className="w-4 h-4" />
+              Search
+            </button>
+            <button
+              onClick={() => setIsListModalOpen(true)}
+              className="flex items-center justify-center gap-1 px-3 py-2 bg-accent text-foreground rounded-md font-semibold text-sm hover:bg-accent/80 transition-all shadow-lg shadow-accent/60 hover:shadow-accent/100 hover:scale-105 animate-pulse"
+            >
+              <Upload className="w-4 h-4" />
+              Upload
+            </button>
+          </div>
         </div>
       </div>
 
@@ -325,7 +347,7 @@ const CustomerProducts = () => {
         </div>
       </div>
 
-      <div className="px-4 lg:px-6">
+      <div ref={productsRef} className="px-4 lg:px-6">
 
         {/* Product Grid */}
         {products.length === 0 ? (

@@ -147,10 +147,13 @@ router.get('/categories', async (req, res) => {
   }
 });
 
-// GET /api/products/:productId
+// GET /api/products/:productId?shopOwnerId=xxx
 router.get('/:productId', async (req, res) => {
   try {
-    const product = await Product.findOne({ id: req.params.productId });
+    const { shopOwnerId } = req.query;
+    const filter = { id: req.params.productId };
+    if (shopOwnerId) filter.shopOwnerId = shopOwnerId;
+    const product = await Product.findOne(filter);
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json({ product });
   } catch (err) {
@@ -177,12 +180,16 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/products/:productId — Update a product
+// PUT /api/products/:productId?shopOwnerId=xxx — Update a product
 router.put('/:productId', async (req, res) => {
   try {
+    const { shopOwnerId } = req.query;
     const updates = req.body;
+    if (!shopOwnerId) {
+      return res.status(400).json({ error: 'shopOwnerId query parameter is required' });
+    }
     const product = await Product.findOneAndUpdate(
-      { id: req.params.productId },
+      { id: req.params.productId, shopOwnerId },
       { $set: updates },
       { returnDocument: 'after' }
     );
@@ -193,10 +200,14 @@ router.put('/:productId', async (req, res) => {
   }
 });
 
-// DELETE /api/products/:productId — Delete a product
+// DELETE /api/products/:productId?shopOwnerId=xxx — Delete a product
 router.delete('/:productId', async (req, res) => {
   try {
-    const product = await Product.findOneAndDelete({ id: req.params.productId });
+    const { shopOwnerId } = req.query;
+    if (!shopOwnerId) {
+      return res.status(400).json({ error: 'shopOwnerId query parameter is required' });
+    }
+    const product = await Product.findOneAndDelete({ id: req.params.productId, shopOwnerId });
     if (!product) return res.status(404).json({ error: 'Product not found' });
     res.json({ message: 'Product deleted' });
   } catch (err) {
@@ -204,7 +215,7 @@ router.delete('/:productId', async (req, res) => {
   }
 });
 
-// POST /api/products/bulk — Bulk save products
+// POST /api/products/bulk — Bulk save products (expects id, shopOwnerId in each product)
 router.post('/bulk', async (req, res) => {
   try {
     const { products } = req.body;
@@ -213,8 +224,11 @@ router.post('/bulk', async (req, res) => {
     }
     const results = [];
     for (const p of products) {
+      if (!p.id || !p.shopOwnerId) {
+        return res.status(400).json({ error: 'Each product must have id and shopOwnerId' });
+      }
       const result = await Product.findOneAndUpdate(
-        { id: p.id },
+        { id: p.id, shopOwnerId: p.shopOwnerId },
         { $set: p },
         { upsert: true, returnDocument: 'after' }
       );

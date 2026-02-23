@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const productSchema = new mongoose.Schema({
   id: {
     type: String,
-    required: true,
-    unique: true
+    required: true
   },
   shopOwnerId: {
     type: String,
@@ -33,6 +32,9 @@ const productSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Compound unique index: same catalog product can exist for different owners
+productSchema.index({ id: 1, shopOwnerId: 1 }, { unique: true });
 
 // Index for faster searches
 productSchema.index({ name: 'text', category: 'text' });
