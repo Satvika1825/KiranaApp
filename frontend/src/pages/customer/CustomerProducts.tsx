@@ -18,7 +18,11 @@ import {
   Search,
   X,
   ArrowLeft,
+  Camera,
+  Store,
 } from 'lucide-react';
+import GroceryListModal from '@/components/customer/GroceryListModal';
+
 
 const CustomerProducts = () => {
   const navigate = useNavigate();
@@ -32,6 +36,7 @@ const CustomerProducts = () => {
   const userId = customer?.id || 'guest';
 
   const [storeName, setStoreName] = useState('Store');
+  const [storePhoto, setStorePhoto] = useState('');
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
@@ -40,6 +45,8 @@ const CustomerProducts = () => {
   const [showToast, setShowToast] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cartLoading, setCartLoading] = useState(false);
+  const [isListModalOpen, setIsListModalOpen] = useState(false);
+
 
   // Fetch store name, products and cart from backend
   useEffect(() => {
@@ -58,6 +65,7 @@ const CustomerProducts = () => {
         ]);
 
         if (storeData?.store?.shopName) setStoreName(storeData.store.shopName);
+        if (storeData?.store?.shopPhoto) setStorePhoto(storeData.store.shopPhoto);
 
         if (productsData.products) {
           const mapped = productsData.products.map((p: any) => ({
@@ -80,7 +88,8 @@ const CustomerProducts = () => {
               price: item.price,
               shopOwnerId: item.shopOwnerId,
               available: true,
-              category: ''
+              category: '',
+              image: ''
             },
             quantity: item.quantity
           }));
@@ -168,165 +177,251 @@ const CustomerProducts = () => {
     }
   };
 
+  const handleBulkAdd = async (items: any[]) => {
+    setCartLoading(true);
+    try {
+      let updated = [...cart];
+
+      items.forEach(item => {
+        const existing = updated.find(c => c.product.id === item.id);
+        if (existing) {
+          existing.quantity += 1;
+        } else {
+          updated.push({
+            product: {
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              shopOwnerId: ownerId,
+              available: true,
+              category: item.category || '',
+              image: item.image || ''
+            },
+            quantity: 1
+          });
+        }
+      });
+
+      setCart(updated);
+
+      // Sync to backend
+      const apiItems = updated.map(c => ({
+        productId: c.product.id,
+        quantity: c.quantity,
+        name: c.product.name,
+        price: c.product.price,
+        shopOwnerId: c.product.shopOwnerId
+      }));
+      await api.cart.update(userId, apiItems);
+
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
+    } catch (err) {
+      console.error('Failed to update cart bulk', err);
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+
   const cartCount = cart.reduce(
     (s, c) => s + c.quantity,
     0
   );
 
   return (
-    <div className="w-full px-6 lg:px-10 py-6 animate-fade-in relative">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/customer/home')} className="p-1.5 rounded-lg hover:bg-accent transition-colors">
-            <ArrowLeft className="w-5 h-5 text-muted-foreground" />
-          </button>
-          <div>
-            <h2 className="text-xl font-bold">{storeName}</h2>
-            <p className="text-sm text-muted-foreground">
-              {loading ? 'Loading...' : `${products.length} products available`}
-            </p>
+    <div className="w-full min-h-screen bg-background animate-fade-in relative pb-20">
+      {/* Store Banner */}
+      <div className="relative w-full h-48 md:h-64 overflow-hidden bg-muted">
+        {storePhoto ? (
+          <img
+            src={storePhoto}
+            alt={storeName}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/30 flex items-center justify-center">
+            <Store className="w-16 h-16 text-primary/20" />
           </div>
-        </div>
+        )}
+        <div className="absolute inset-0 bg-black/30" />
 
+        {/* Back Button Overlay */}
+        <button
+          onClick={() => navigate('/customer/home')}
+          className="absolute top-4 left-4 p-2 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 transition-colors z-10"
+        >
+          <ArrowLeft className="w-5 h-5 text-white" />
+        </button>
+
+        {/* Cart Button Overlay */}
         {cartCount > 0 && (
           <button
-            onClick={() =>
-              navigate('/customer/cart')
-            }
-            className="flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:opacity-90"
+            onClick={() => navigate('/customer/cart')}
+            className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:opacity-90 shadow-lg z-10"
           >
             <ShoppingCart className="w-4 h-4" />
             Cart ({cartCount})
           </button>
         )}
-      </div>
 
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <input
-          type="text"
-          value={search}
-          onChange={e =>
-            setSearch(e.target.value)
-          }
-          className="w-full pl-9 pr-8 py-2.5 rounded-lg border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          placeholder="Search products..."
-        />
-        {search && (
-          <button
-            onClick={() => setSearch('')}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-
-      {/* Categories */}
-      <div className="flex gap-2 overflow-x-auto pb-3 mb-4">
-        {categories.map(cat => (
-          <button
-            key={cat}
-            onClick={() =>
-              setSelectedCategory(cat)
-            }
-            className={`px-3 py-1.5 rounded-full text-xs font-semibold ${selectedCategory === cat
-              ? 'bg-primary text-white'
-              : 'bg-accent text-accent-foreground'
-              }`}
-          >
-            {cat}
-          </button>
-        ))}
-      </div>
-
-      {/* Product Grid */}
-      {products.length === 0 ? (
-        <div className="text-center py-10">
-          <Package className="w-10 h-10 mx-auto mb-2 text-gray-400" />
-          <p className="text-muted-foreground">
-            No products found.
+        {/* Store Name Overlay */}
+        <div className="absolute bottom-6 left-6 text-white">
+          <h2 className="text-2xl md:text-3xl font-bold mb-1 drop-shadow-md">{storeName}</h2>
+          <p className="text-sm opacity-90 drop-shadow-sm font-medium">
+            {loading ? 'Loading...' : `${products.length} products available`}
           </p>
         </div>
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {products.map(p => (
-            <div
-              key={p.id}
-              className="bg-white rounded-xl shadow-sm p-3 flex flex-col"
-            >
-              {/* PRODUCT IMAGE */}
-              <div className="w-full h-36 overflow-hidden rounded-xl mb-3 bg-gradient-to-br from-slate-100 to-slate-200 relative">
-                {p.image ? (
-                  <img
-                    src={p.image}
-                    alt={p.name}
-                    className="w-full h-full object-cover"
-                    onError={e => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }}
-                  />
-                ) : null}
-                <div className={`w-full h-full flex flex-col items-center justify-center gap-1 ${p.image ? 'hidden' : ''}`}>
-                  <span className="text-3xl font-bold text-slate-400">{p.name.charAt(0).toUpperCase()}</span>
-                  <span className="text-xs text-slate-400">{p.category}</span>
-                </div>
-              </div>
+      </div>
 
-              <h3 className="text-sm font-medium mb-1">
-                {p.name}
-              </h3>
-
-              <p className="text-xs text-gray-500 mb-1">
-                {p.category}
-              </p>
-
-              <p className="font-bold mb-2">
-                ₹{p.price}
-              </p>
-
-              {/* Quantity */}
-              <div className="flex items-center gap-2 mb-2">
-                <button
-                  onClick={() =>
-                    setQty(p.id, getQty(p.id) - 1)
-                  }
-                  className="w-7 h-7 border rounded flex items-center justify-center"
-                >
-                  <Minus className="w-3 h-3" />
-                </button>
-
-                <span className="w-6 text-center text-sm">
-                  {getQty(p.id)}
-                </span>
-
-                <button
-                  onClick={() =>
-                    setQty(p.id, getQty(p.id) + 1)
-                  }
-                  className="w-7 h-7 border rounded flex items-center justify-center"
-                >
-                  <Plus className="w-3 h-3" />
-                </button>
-              </div>
-
+      <div className="px-4 lg:px-6 pt-6 mb-6">
+        {/* Search */}
+        <div className="relative mb-6">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            value={search}
+            onChange={e =>
+              setSearch(e.target.value)
+            }
+            className="w-full pl-9 pr-24 py-3 rounded-xl border bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+            placeholder="Search products in this store..."
+          />
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            {search && (
               <button
-                onClick={() => addToCart(p.id)}
-                className="w-full py-2 bg-primary text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1"
+                onClick={() => setSearch('')}
+                className="p-1 text-muted-foreground hover:bg-accent rounded"
               >
-                <ShoppingCart className="w-3 h-3" />
-                Add to Cart
+                <X className="w-4 h-4" />
               </button>
-            </div>
+            )}
+            <button
+              onClick={() => setIsListModalOpen(true)}
+              className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary text-[10px] font-bold rounded-lg hover:bg-primary/20 transition-colors"
+            >
+              <Camera className="w-3.5 h-3.5" />
+              UPLOAD LIST
+            </button>
+          </div>
+        </div>
+
+        {/* Categories */}
+        <div className="flex gap-2 overflow-x-auto pb-3 mb-4 no-scrollbar">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() =>
+                setSelectedCategory(cat)
+              }
+              className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${selectedCategory === cat
+                ? 'bg-primary text-white shadow-md'
+                : 'bg-white border text-muted-foreground hover:bg-accent'
+                }`}
+            >
+              {cat}
+            </button>
           ))}
         </div>
-      )}
+      </div>
 
-      {/* Toast */}
-      {showToast && (
-        <div className="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
-          Item Added to Cart 🛒
-        </div>
-      )}
+      <div className="px-4 lg:px-6">
+
+        {/* Product Grid */}
+        {products.length === 0 ? (
+          <div className="text-center py-10">
+            <Package className="w-10 h-10 mx-auto mb-2 text-gray-400" />
+            <p className="text-muted-foreground">
+              No products found.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {products.map(p => (
+              <div
+                key={p.id}
+                className="bg-white rounded-xl shadow-sm p-3 flex flex-col"
+              >
+                {/* PRODUCT IMAGE */}
+                <div className="w-full h-36 overflow-hidden rounded-xl mb-3 bg-gradient-to-br from-slate-100 to-slate-200 relative">
+                  {p.image ? (
+                    <img
+                      src={p.image}
+                      alt={p.name}
+                      className="w-full h-full object-cover"
+                      onError={e => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }}
+                    />
+                  ) : null}
+                  <div className={`w-full h-full flex flex-col items-center justify-center gap-1 ${p.image ? 'hidden' : ''}`}>
+                    <span className="text-3xl font-bold text-slate-400">{p.name.charAt(0).toUpperCase()}</span>
+                    <span className="text-xs text-slate-400">{p.category}</span>
+                  </div>
+                </div>
+
+                <h3 className="text-sm font-medium mb-1">
+                  {p.name}
+                </h3>
+
+                <p className="text-xs text-gray-500 mb-1">
+                  {p.category}
+                </p>
+
+                <p className="font-bold mb-2">
+                  ₹{p.price}
+                </p>
+
+                {/* Quantity */}
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    onClick={() =>
+                      setQty(p.id, getQty(p.id) - 1)
+                    }
+                    className="w-7 h-7 border rounded flex items-center justify-center"
+                  >
+                    <Minus className="w-3 h-3" />
+                  </button>
+
+                  <span className="w-6 text-center text-sm">
+                    {getQty(p.id)}
+                  </span>
+
+                  <button
+                    onClick={() =>
+                      setQty(p.id, getQty(p.id) + 1)
+                    }
+                    className="w-7 h-7 border rounded flex items-center justify-center"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => addToCart(p.id)}
+                  className="w-full py-2 bg-primary text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1"
+                >
+                  <ShoppingCart className="w-3 h-3" />
+                  Add to Cart
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Toast */}
+        {showToast && (
+          <div className="fixed bottom-6 right-6 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+            Items Added to Cart 🛒
+          </div>
+        )}
+
+        {/* Grocery List Modal */}
+        <GroceryListModal
+          isOpen={isListModalOpen}
+          onClose={() => setIsListModalOpen(false)}
+          ownerId={ownerId}
+          onConfirm={handleBulkAdd}
+        />
+      </div>
     </div>
   );
 };
