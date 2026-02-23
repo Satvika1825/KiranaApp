@@ -79,7 +79,7 @@ const StoreSelection = () => {
   }, [stores, searchQuery, filterOpenOnly]);
 
   return (
-    <div className="animate-fade-in pb-20">
+    <div className="animate-fade-in pb-20 px-4 md:px-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="text-xl font-heading font-bold text-foreground mb-1">Nearby Stores</h2>

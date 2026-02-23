@@ -79,7 +79,7 @@ const CartPage = () => {
   const total = subtotal + (cart.length > 0 ? DELIVERY_CHARGE : 0);
 
   return (
-    <div className="animate-fade-in">
+    <div className="animate-fade-in px-4 md:px-6 py-4">
       <h2 className="text-xl font-heading font-bold text-foreground mb-4">Your Cart</h2>
 
       {cart.length === 0 ? (
