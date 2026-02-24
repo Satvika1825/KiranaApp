@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut,
   User,
+  Box,
 } from "lucide-react";
 import { getAdminProfile } from '@/lib/store';
 
@@ -26,6 +27,7 @@ const AdminLayout = () => {
     { name: "Owners", path: "/admin/owners", icon: Users },
     { name: "Customers", path: "/admin/customers", icon: Users },
     { name: "Orders", path: "/admin/orders", icon: ShoppingCart },
+    { name: "Bulk Orders", path: "/admin/bulk-order-config", icon: Box },
     { name: "Reports", path: "/admin/reports", icon: FileText },
     { name: "Settings", path: "/admin/settings", icon: Settings },
   ];

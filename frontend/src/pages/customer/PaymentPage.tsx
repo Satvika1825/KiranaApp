@@ -98,9 +98,9 @@ const PaymentPage = () => {
   };
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-20 gap-3">
-      <Loader2 className="w-8 h-8 text-primary animate-spin" />
-      <p className="text-sm text-muted-foreground">Preparing your checkout...</p>
+    <div className="flex flex-col items-center justify-center py-24 gap-4">
+      <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      <p className="text-base text-muted-foreground font-heading font-semibold">Processing checkout...</p>
     </div>
   );
 
@@ -111,61 +111,61 @@ const PaymentPage = () => {
   ];
 
   return (
-    <div className="animate-fade-in max-w-lg mx-auto pb-10">
-      <h2 className="text-xl font-heading font-bold text-foreground mb-4">Checkout</h2>
+    <div className="animate-fade-in max-w-lg mx-auto pb-12 px-4 bg-gradient-to-b from-background to-secondary/20 min-h-screen py-6">
+      <h2 className="text-3xl font-heading font-bold text-foreground mb-6">Checkout</h2>
 
       {error && (
-        <div className="mb-4 p-3 rounded-xl bg-destructive/10 text-destructive text-sm flex items-center gap-2">
-          <AlertCircle className="w-4 h-4" /> {error}
+        <div className="mb-6 p-4 rounded-xl bg-destructive/15 border-2 border-destructive/30 text-destructive text-base flex items-center gap-3 font-body font-semibold">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" /> {error}
         </div>
       )}
 
       {/* Delivery Address */}
-      <div className="kc-card p-5 mb-4">
-        <h3 className="font-heading font-bold text-foreground text-sm mb-3 flex items-center gap-2 border-b pb-2">
-          <MapPin className="w-4 h-4 text-primary" /> Delivery Address
+      <div className="kc-card p-6 mb-6 border-2 border-secondary rounded-2xl">
+        <h3 className="font-heading font-bold text-foreground text-lg mb-4 flex items-center gap-2 pb-3 border-b-2 border-secondary">
+          <MapPin className="w-5 h-5 text-primary" /> Delivery Address
         </h3>
         {addresses.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {addresses.map(a => (
               <button key={a._id} onClick={() => setSelectedAddr(a._id)}
-                className={`w-full text-left p-3 rounded-xl border-2 transition-all ${selectedAddr === a._id ? 'border-primary bg-primary/5 ring-4 ring-primary/5' : 'border-border'}`}>
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-foreground text-sm">{a.label}</span>
-                  {selectedAddr === a._id && <div className="w-2 h-2 rounded-full bg-primary" />}
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all font-body ${selectedAddr === a._id ? 'border-primary bg-primary/10 ring-2 ring-primary/20 shadow-md' : 'border-secondary hover:border-primary/40'}`}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="font-heading font-bold text-foreground text-base">{a.label}</span>
+                  {selectedAddr === a._id && <div className="w-3 h-3 rounded-full bg-primary shadow-lg shadow-primary/40" />}
                 </div>
-                <span className="block text-xs text-muted-foreground mt-0.5">{a.houseNumber}, {a.street} - {a.pinCode}</span>
+                <span className="block text-sm text-muted-foreground">{a.houseNumber}, {a.street} - {a.pinCode}</span>
               </button>
             ))}
-            <button onClick={() => navigate('/customer/addresses')}
-              className="w-full py-2 text-primary text-xs font-bold hover:underline">
+            <button onClick={() => navigate('/customer/address')}
+              className="w-full py-3 text-primary text-base font-bold hover:bg-primary/10 rounded-lg transition-colors">
               + Add New Address
             </button>
           </div>
         ) : (
-          <div className="text-center py-4">
-            <p className="text-sm text-muted-foreground mb-3">No addresses found</p>
-            <button onClick={() => navigate('/customer/addresses')}
-              className="bg-accent px-4 py-2 rounded-lg text-xs font-bold">
-              Add Address
+          <div className="text-center py-6">
+            <p className="text-base text-muted-foreground mb-4 font-body">No addresses found</p>
+            <button onClick={() => navigate('/customer/address')}
+              className="bg-primary px-6 py-3 rounded-xl text-base font-bold text-primary-foreground">
+              Add Address Now
             </button>
           </div>
         )}
       </div>
 
       {/* Payment Method */}
-      <div className="kc-card p-5 mb-4">
-        <h3 className="font-heading font-bold text-foreground text-sm mb-3 border-b pb-2">Payment Method</h3>
-        <div className="space-y-2">
+      <div className="kc-card p-6 mb-6 border-2 border-secondary rounded-2xl">
+        <h3 className="font-heading font-bold text-foreground text-lg mb-4 pb-3 border-b-2 border-secondary">Payment Method</h3>
+        <div className="space-y-3">
           {methods.map(m => (
             <button key={m.id} onClick={() => setPayMethod(m.id)}
-              className={`w-full flex items-center gap-3 p-3 rounded-xl border-2 transition-all ${payMethod === m.id ? 'border-primary bg-primary/5 ring-4 ring-primary/5' : 'border-border'}`}>
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${payMethod === m.id ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'bg-muted text-muted-foreground'}`}>
-                <m.icon className="w-5 h-5" />
+              className={`w-full flex items-center gap-4 p-4 rounded-xl border-2 transition-all font-body ${payMethod === m.id ? 'border-primary bg-primary/10 ring-2 ring-primary/20 shadow-md' : 'border-secondary hover:border-primary/40'}`}>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${payMethod === m.id ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/40' : 'bg-secondary text-muted-foreground'}`}>
+                <m.icon className="w-6 h-6" />
               </div>
-              <div className="flex-1">
-                <p className="font-bold text-foreground text-sm">{m.label}</p>
-                <p className="text-xs text-muted-foreground">{m.desc}</p>
+              <div className="flex-1 text-left">
+                <p className="font-heading font-bold text-foreground text-base">{m.label}</p>
+                <p className="text-sm text-muted-foreground mt-1">{m.desc}</p>
               </div>
             </button>
           ))}
@@ -173,35 +173,35 @@ const PaymentPage = () => {
       </div>
 
       {/* Special Instructions */}
-      <div className="kc-card p-5 mb-4">
-        <h3 className="font-heading font-bold text-foreground text-sm mb-3 border-b pb-2">Special Instructions</h3>
+      <div className="kc-card p-6 mb-6 border-2 border-secondary rounded-2xl">
+        <h3 className="font-heading font-bold text-foreground text-lg mb-4 pb-3 border-b-2 border-secondary">Special Instructions</h3>
         <textarea value={instructions} onChange={e => setInstructions(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+          className="w-full px-4 py-3 rounded-xl border-2 border-secondary bg-white text-base font-body focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-none"
           rows={2} placeholder="e.g. Near the park gate, Call before delivery..." />
       </div>
 
       {/* Order Summary */}
-      <div className="kc-card p-5 mb-6">
-        <h3 className="font-heading font-bold text-foreground text-sm mb-3 border-b pb-2">Order Summary</h3>
-        <div className="space-y-2 mb-4">
+      <div className="kc-card p-6 mb-7 border-2 border-secondary rounded-2xl">
+        <h3 className="font-heading font-bold text-foreground text-lg mb-4 pb-3 border-b-2 border-secondary">Order Summary</h3>
+        <div className="space-y-3 mb-4 font-body">
           {cart.map((item, i) => (
-            <div key={i} className="flex justify-between text-sm text-foreground">
-              <span className="font-medium">{item.product.name} <span className="text-muted-foreground">× {item.quantity}</span></span>
-              <span className="font-bold">₹{item.product.price * item.quantity}</span>
+            <div key={i} className="flex justify-between text-base text-foreground">
+              <span className="font-semibold">{item.product.name} <span className="text-muted-foreground text-sm">× {item.quantity}</span></span>
+              <span className="font-heading font-bold text-foreground">₹{item.product.price * item.quantity}</span>
             </div>
           ))}
         </div>
-        <div className="flex justify-between text-sm py-2 text-muted-foreground border-t border-dashed">
-          <span>Delivery Charge</span><span>₹{DELIVERY_CHARGE}</span>
+        <div className="flex justify-between text-base py-3 text-muted-foreground border-t-2 border-dashed border-secondary font-body">
+          <span className="font-semibold">Delivery Charge</span><span className="font-heading font-bold">₹{DELIVERY_CHARGE}</span>
         </div>
-        <div className="flex justify-between items-center border-t pt-3 mt-1">
-          <span className="font-heading font-bold text-foreground">Total Payable</span>
-          <span className="text-2xl font-heading font-bold text-primary">₹{total}</span>
+        <div className="flex justify-between items-center border-t-2 border-secondary pt-4 mt-2">
+          <span className="font-heading font-bold text-foreground text-lg">Total Payable</span>
+          <span className="text-3xl font-heading font-bold text-primary">₹{total.toFixed(2)}</span>
         </div>
       </div>
 
       <button onClick={placeOrder} disabled={placing || cart.length === 0}
-        className="w-full bg-primary text-primary-foreground h-14 rounded-2xl font-bold shadow-xl shadow-primary/20 hover:opacity-95 transition-all flex items-center justify-center gap-3 disabled:opacity-50">
+        className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground h-14 rounded-xl font-heading font-bold shadow-lg shadow-primary/40 hover:shadow-xl transition-all flex items-center justify-center gap-3 disabled:opacity-50 text-lg">
         {placing ? <Loader2 className="w-6 h-6 animate-spin" /> : <>Place Order <ArrowRight className="w-5 h-5" /></>}
       </button>
     </div>

@@ -69,54 +69,55 @@ const CustomerOrders = () => {
   };
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-20 gap-3">
-      <Loader2 className="w-8 h-8 text-primary animate-spin" />
-      <p className="text-sm text-muted-foreground">Loading your orders...</p>
+    <div className="flex flex-col items-center justify-center py-24 gap-4">
+      <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      <p className="text-base text-muted-foreground font-heading font-semibold">Loading your orders...</p>
     </div>
   );
 
   return (
-    <div className="animate-fade-in">
-      <h2 className="text-xl font-heading font-bold text-foreground mb-1">My Orders</h2>
-      <p className="text-sm text-muted-foreground mb-4">Track and reorder</p>
+    <div className="animate-fade-in px-4 md:px-6 py-6 bg-gradient-to-b from-background to-secondary/20 min-h-screen">
+      <h2 className="text-3xl font-heading font-bold text-foreground mb-2">My Orders</h2>
+      <p className="text-base text-muted-foreground mb-6 font-body">Track and reorder your groceries</p>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm text-center">{error}</div>
+        <div className="mb-6 p-4 rounded-xl bg-destructive/15 border-2 border-destructive/30 text-destructive text-sm text-center font-semibold">{error}</div>
       )}
 
       {orders.length === 0 ? (
-        <div className="kc-card-flat p-8 text-center text-muted-foreground">
-          <Package className="w-10 h-10 mx-auto mb-2 opacity-20" />
-          <p className="text-sm font-medium">No orders found</p>
-          <button onClick={() => navigate('/customer/stores')}
-            className="mt-3 text-primary text-sm font-bold hover:underline">
-            Start Shopping
+        <div className="kc-card-flat p-12 text-center text-muted-foreground rounded-2xl border-2 border-secondary">
+          <Package className="w-16 h-16 mx-auto mb-4 opacity-30" />
+          <p className="text-lg font-bold font-heading">No orders found</p>
+          <p className="text-base mt-2 mb-4">Start shopping to place your first order</p>
+          <button onClick={() => navigate('/customer/home')}
+            className="inline-block px-6 py-3 text-primary text-base font-bold hover:bg-primary/10 rounded-lg transition-colors">
+            Continue Shopping →
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {orders.map(o => (
-            <div key={o._id} className="kc-card p-4">
-              <div className="flex items-center justify-between mb-2">
+            <div key={o._id} className="kc-card p-5 border-2 border-secondary hover:border-primary/30 hover:shadow-lg transition-all">
+              <div className="flex items-start justify-between mb-3">
                 <div>
-                  <p className="font-heading font-bold text-foreground text-sm">Order #{o._id.slice(-6).toUpperCase()}</p>
-                  <p className="text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleDateString()}</p>
+                  <p className="font-heading font-bold text-foreground text-lg">Order #{o._id.slice(-6).toUpperCase()}</p>
+                  <p className="text-sm text-muted-foreground font-body mt-1">{new Date(o.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
                 </div>
-                <span className={statusClass[o.status] || 'kc-status'}>{o.status}</span>
+                <span className={`px-4 py-1.5 rounded-full text-xs font-bold ${o.status === 'Delivered' ? 'bg-green-100 text-green-700' : o.status === 'Out for Delivery' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}`}>{o.status}</span>
               </div>
-              <p className="text-sm text-muted-foreground mb-3">
-                {o.items.length} item{o.items.length > 1 ? 's' : ''} · <span className="text-foreground font-bold font-heading text-base">₹{o.totalPrice}</span>
-                {o.shopDetails && <span> · {o.shopDetails.shopName}</span>}
+              <p className="text-base text-muted-foreground mb-4 font-body">
+                <span className="font-semibold">{o.items.length} item{o.items.length > 1 ? 's' : ''}</span> · <span className="text-foreground font-heading font-bold text-lg">₹{o.totalPrice}</span>
+                {o.shopDetails && <span className="text-primary font-semibold ml-2">· {o.shopDetails.shopName}</span>}
               </p>
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <button onClick={() => navigate(`/customer/order/${o._id}`)}
-                  className="flex-1 flex items-center justify-center gap-1.5 h-10 bg-accent text-accent-foreground rounded-xl text-xs font-bold hover:opacity-90 transition-all border border-input">
-                  Track Order <ChevronRight className="w-3.5 h-3.5" />
+                  className="flex-1 flex items-center justify-center gap-2 h-11 bg-primary/15 text-primary rounded-xl text-sm font-bold hover:bg-primary/25 transition-all border-2 border-primary/30 hover:border-primary/50">
+                  <ChevronRight className="w-4 h-4" /> Track Order
                 </button>
                 {o.status === 'Delivered' && (
                   <button onClick={() => reorder(o.items)}
-                    className="flex-1 flex items-center justify-center gap-1.5 h-10 bg-primary text-primary-foreground rounded-xl text-xs font-bold hover:opacity-90 transition-all shadow-md shadow-primary/20">
-                    <RefreshCw className="w-3.5 h-3.5" /> Reorder
+                    className="flex-1 flex items-center justify-center gap-2 h-11 bg-gradient-to-r from-primary to-primary/80 text-primary-foreground rounded-xl text-sm font-bold hover:shadow-lg transition-all shadow-md shadow-primary/40">
+                    <RefreshCw className="w-4 h-4" /> Reorder
                   </button>
                 )}
               </div>

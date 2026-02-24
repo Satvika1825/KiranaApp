@@ -236,9 +236,9 @@ const CustomerProducts = () => {
   );
 
   return (
-    <div className="w-full h-screen bg-background animate-fade-in relative pb-20 overflow-y-auto">
+    <div className="w-full min-h-screen bg-gradient-to-b from-background via-background to-secondary/20 animate-fade-in relative pb-20 overflow-y-auto">
       {/* Store Banner */}
-      <div className="relative w-full h-48 md:h-64 overflow-hidden bg-muted">
+      <div className="relative w-full h-48 md:h-72 overflow-hidden bg-gradient-to-br from-primary/20 to-accent/20">
         {storePhoto ? (
           <img
             src={storePhoto}
@@ -250,12 +250,12 @@ const CustomerProducts = () => {
             <Store className="w-16 h-16 text-primary/20" />
           </div>
         )}
-        <div className="absolute inset-0 bg-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
 
         {/* Back Button Overlay */}
         <button
           onClick={() => navigate('/customer/home')}
-          className="absolute top-4 left-4 p-2 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 transition-colors z-10"
+          className="absolute top-4 left-4 p-2.5 rounded-full bg-white/20 backdrop-blur-md hover:bg-white/40 transition-all duration-200 hover:scale-110 z-10 shadow-lg"
         >
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
@@ -264,7 +264,7 @@ const CustomerProducts = () => {
         {cartCount > 0 && (
           <button
             onClick={() => navigate('/customer/cart')}
-            className="absolute top-4 right-4 flex items-center gap-2 px-3 py-2 bg-primary text-white rounded-lg text-sm font-semibold hover:opacity-90 shadow-lg z-10"
+            className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-bold hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 z-10"
           >
             <ShoppingCart className="w-4 h-4" />
             Cart ({cartCount})
@@ -272,138 +272,144 @@ const CustomerProducts = () => {
         )}
 
         {/* Store Name and Action Buttons Overlay */}
-        <div className="absolute bottom-4 left-4 right-4 text-white z-10">
-          <h2 className="text-2xl md:text-3xl font-bold mb-1 drop-shadow-md">{storeName}</h2>
-          <p className="text-sm opacity-90 drop-shadow-sm font-medium mb-2">
+        <div className="absolute bottom-6 left-4 right-4 text-white z-10">
+          <h2 className="text-3xl md:text-4xl font-bold mb-2 drop-shadow-lg font-heading">{storeName}</h2>
+          <p className="text-base opacity-95 drop-shadow-md font-medium mb-3 font-body">
             {loading ? 'Loading...' : `${products.length} products available`}
           </p>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-3">
             <button
               onClick={scrollToProducts}
-              className="flex items-center justify-center gap-1 px-3 py-2 bg-primary text-white rounded-md font-semibold text-sm hover:bg-primary/90 transition-all shadow-lg shadow-primary/60 hover:shadow-primary/100 hover:scale-105 animate-pulse"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg font-semibold text-sm hover:bg-primary/90 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
             >
               <Search className="w-4 h-4" />
-              Search
+              Search Products
             </button>
             <button
               onClick={() => setIsListModalOpen(true)}
-              className="flex items-center justify-center gap-1 px-3 py-2 bg-accent text-foreground rounded-md font-semibold text-sm hover:bg-accent/80 transition-all shadow-lg shadow-accent/60 hover:shadow-accent/100 hover:scale-105 animate-pulse"
+              className="flex items-center justify-center gap-2 px-4 py-2.5 bg-accent text-foreground rounded-lg font-semibold text-sm hover:bg-accent/80 transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
             >
               <Upload className="w-4 h-4" />
-              Upload
+              Upload List
             </button>
           </div>
         </div>
       </div>
 
-      <div className="px-4 lg:px-6 pt-6 mb-6">
+      <div className="px-4 lg:px-8 pt-8 mb-8">
         {/* Search */}
-        <div className="relative mb-6">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <input
-            type="text"
-            value={search}
-            onChange={e =>
-              setSearch(e.target.value)
-            }
-            className="w-full pl-9 pr-24 py-3 rounded-xl border bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="Search products in this store..."
-          />
-          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            {search && (
+        <div className="mb-7">
+          <label className="text-sm font-bold text-foreground mb-2 inline-block font-heading">Search Products</label>
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            <input
+              type="text"
+              value={search}
+              onChange={e =>
+                setSearch(e.target.value)
+              }
+              className="w-full pl-12 pr-28 py-3 rounded-xl border-2 border-secondary bg-white text-base font-body shadow-sm hover:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all duration-200"
+              placeholder="Search products..."
+            />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              {search && (
+                <button
+                  onClick={() => setSearch('')}
+                  className="p-1.5 text-muted-foreground hover:bg-accent rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
               <button
-                onClick={() => setSearch('')}
-                className="p-1 text-muted-foreground hover:bg-accent rounded"
+                onClick={() => setIsListModalOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/15 text-primary text-xs font-bold rounded-lg hover:bg-primary/25 transition-colors"
               >
-                <X className="w-4 h-4" />
+                <Camera className="w-4 h-4" />
+                UPLOAD
               </button>
-            )}
-            <button
-              onClick={() => setIsListModalOpen(true)}
-              className="flex items-center gap-1 px-3 py-1.5 bg-primary/10 text-primary text-[10px] font-bold rounded-lg hover:bg-primary/20 transition-colors"
-            >
-              <Camera className="w-3.5 h-3.5" />
-              UPLOAD LIST
-            </button>
+            </div>
           </div>
         </div>
 
         {/* Categories */}
-        <div className="flex gap-2 overflow-x-auto pb-3 mb-4 no-scrollbar">
-          {categories.map(cat => (
-            <button
-              key={cat}
-              onClick={() =>
-                setSelectedCategory(cat)
-              }
-              className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${selectedCategory === cat
-                ? 'bg-primary text-white shadow-md'
-                : 'bg-white border text-muted-foreground hover:bg-accent'
-                }`}
-            >
-              {cat}
-            </button>
-          ))}
+        <div className="mb-8">
+          <label className="text-sm font-bold text-foreground mb-3 inline-block font-heading">Categories</label>
+          <div className="flex gap-2 overflow-x-auto pb-3 no-scrollbar">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() =>
+                  setSelectedCategory(cat)
+                }
+                className={`px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all duration-200 font-heading ${selectedCategory === cat
+                  ? 'bg-primary text-white shadow-lg scale-105'
+                  : 'bg-white border-2 border-secondary text-foreground hover:border-primary/50 hover:bg-secondary/40'
+                  }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div ref={productsRef} className="px-4 lg:px-6">
+      <div ref={productsRef} className="px-4 lg:px-8 pb-8">
 
         {/* Product Grid */}
         {products.length === 0 ? (
-          <div className="text-center py-10">
-            <Package className="w-10 h-10 mx-auto mb-2 text-gray-400" />
-            <p className="text-muted-foreground">
+          <div className="text-center py-16">
+            <Package className="w-12 h-12 mx-auto mb-3 text-primary/30" />
+            <p className="text-lg text-muted-foreground font-semibold font-body">
               No products found.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {products.map(p => (
               <div
                 key={p.id}
-                className="bg-white rounded-xl shadow-sm p-3 flex flex-col"
+                className="bg-white rounded-2xl shadow-md hover:shadow-xl hover:scale-105 transition-all duration-300 p-4 flex flex-col border border-secondary/30 hover:border-primary/30 group"
               >
                 {/* PRODUCT IMAGE */}
-                <div className="w-full h-36 overflow-hidden rounded-xl mb-3 bg-gradient-to-br from-slate-100 to-slate-200 relative">
+                <div className="w-full h-40 overflow-hidden rounded-2xl mb-4 bg-gradient-to-br from-slate-100 to-slate-200 relative group-hover:shadow-lg transition-all duration-300">
                   {p.image ? (
                     <img
                       src={p.image}
                       alt={p.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                       onError={e => { (e.target as HTMLImageElement).style.display = 'none'; (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden'); }}
                     />
                   ) : null}
-                  <div className={`w-full h-full flex flex-col items-center justify-center gap-1 ${p.image ? 'hidden' : ''}`}>
-                    <span className="text-3xl font-bold text-slate-400">{p.name.charAt(0).toUpperCase()}</span>
-                    <span className="text-xs text-slate-400">{p.category}</span>
+                  <div className={`w-full h-full flex flex-col items-center justify-center gap-2 ${p.image ? 'hidden' : ''}`}>
+                    <span className="text-4xl font-bold text-slate-300 font-heading">{p.name.charAt(0).toUpperCase()}</span>
+                    <span className="text-xs font-semibold text-slate-400 font-body">{p.category}</span>
                   </div>
                 </div>
 
-                <h3 className="text-sm font-medium mb-1">
+                <h3 className="text-base font-bold text-foreground mb-2 line-clamp-2 font-heading group-hover:text-primary transition-colors">
                   {p.name}
                 </h3>
 
-                <p className="text-xs text-gray-500 mb-1">
+                <p className="text-xs font-semibold text-primary/70 mb-2 font-body">
                   {p.category}
                 </p>
 
-                <p className="font-bold mb-2">
-                  ₹{p.price}
+                <p className="text-xl font-bold text-primary mb-3 font-heading">
+                  ₹{p.price.toFixed(2)}
                 </p>
 
                 {/* Quantity */}
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center justify-between bg-secondary/40 rounded-xl p-2 mb-4 border border-secondary/60">
                   <button
                     onClick={() =>
                       setQty(p.id, getQty(p.id) - 1)
                     }
-                    className="w-7 h-7 border rounded flex items-center justify-center"
+                    className="w-8 h-8 border-2 border-primary rounded-lg flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-200 font-bold text-primary"
                   >
-                    <Minus className="w-3 h-3" />
+                    <Minus className="w-4 h-4" />
                   </button>
 
-                  <span className="w-6 text-center text-sm">
+                  <span className="w-8 text-center text-sm font-bold text-foreground font-body">
                     {getQty(p.id)}
                   </span>
 
@@ -411,17 +417,18 @@ const CustomerProducts = () => {
                     onClick={() =>
                       setQty(p.id, getQty(p.id) + 1)
                     }
-                    className="w-7 h-7 border rounded flex items-center justify-center"
+                    className="w-8 h-8 border-2 border-primary rounded-lg flex items-center justify-center hover:bg-primary hover:text-white transition-all duration-200 font-bold text-primary"
                   >
-                    <Plus className="w-3 h-3" />
+                    <Plus className="w-4 h-4" />
                   </button>
                 </div>
 
                 <button
                   onClick={() => addToCart(p.id)}
-                  className="w-full py-2 bg-primary text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1"
+                  className="w-full py-3 bg-gradient-to-r from-primary to-primary/80 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/40 transition-all duration-200 hover:scale-105 font-heading disabled:opacity-50"
+                  disabled={cartLoading}
                 >
-                  <ShoppingCart className="w-3 h-3" />
+                  <ShoppingCart className="w-4 h-4" />
                   Add to Cart
                 </button>
               </div>

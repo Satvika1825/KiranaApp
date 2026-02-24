@@ -12,6 +12,7 @@ import OwnerDashboard from "./pages/owner/OwnerDashboard";
 import OwnerProducts from "./pages/owner/OwnerProducts";
 import OwnerOrders from "./pages/owner/OwnerOrders";
 import OwnerProfile from "./pages/owner/OwnerProfile";
+import ShopkeeperBulkOrders from "./pages/owner/ShopkeeperBulkOrders";
 import CustomerLogin from "./pages/customer/CustomerLogin";
 import CustomerHome from "./pages/customer/CustomerHome";
 import CustomerAddress from "./pages/customer/CustomerAddress";
@@ -36,10 +37,12 @@ import AdminOwners from "./pages/admin/AdminOwners";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminBulkOrderDashboard from "./pages/admin/BulkOrderConfig";
 
 // Delivery Agent Pages
 import DeliveryLogin from "./pages/delivery-agent/DeliveryLogin";
 import DeliveryDashboard from "./pages/delivery-agent/DeliveryDashboard";
+import BulkDeliveries from "./pages/delivery-agent/BulkDeliveries";
 
 // Layouts
 import OwnerLayout from "./components/OwnerLayout";
@@ -68,6 +71,7 @@ const App = () => (
             <Route path="products" element={<OwnerProducts />} />
             <Route path="orders" element={<OwnerOrders />} />
             <Route path="profile" element={<OwnerProfile />} />
+            <Route path="bulk-orders" element={<ShopkeeperBulkOrders />} />
           </Route>
 
           {/* Customer Flow */}
@@ -96,11 +100,13 @@ const App = () => (
             <Route path="orders" element={<AdminOrders />} />
             <Route path="reports" element={<AdminReports />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="bulk-order-config" element={<AdminBulkOrderDashboard />} />
           </Route>
 
           {/* Delivery Agent Flow */}
           <Route path="/delivery/login" element={<DeliveryLogin />} />
           <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
+          <Route path="/delivery/bulk-deliveries" element={<BulkDeliveries />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

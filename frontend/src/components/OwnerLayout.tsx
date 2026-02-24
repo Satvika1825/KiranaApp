@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, ClipboardList, User, Bell, Menu, X, Store, LogOut, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Package, ClipboardList, User, Bell, Menu, X, Store, LogOut, Loader2, ShoppingCart } from 'lucide-react';
 import { getOwnerProfile } from '@/lib/store';
 import { api } from '@/lib/api';
 
@@ -8,6 +8,7 @@ const navItems = [
   { path: '/owner/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/owner/products', label: 'Products', icon: Package },
   { path: '/owner/orders', label: 'Orders', icon: ClipboardList },
+  { path: '/owner/bulk-orders', label: 'Bulk Orders', icon: ShoppingCart },
   { path: '/owner/profile', label: 'Profile', icon: User },
 ];
 

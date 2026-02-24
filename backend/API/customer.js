@@ -59,7 +59,7 @@ router.delete('/address/:userId/:addressId', async (req, res) => {
 // GET /api/customer/profile/:userId
 router.get('/profile/:userId', async (req, res) => {
   try {
-    const customer = await Customer.findOne({ userId: req.params.userId });
+    const customer = await Customer.findOne({ userId: req.params.userId }).populate('apartment');
     res.json({ customer });
   } catch (err) {
     res.status(500).json({ error: err.message });

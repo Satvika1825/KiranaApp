@@ -43,7 +43,23 @@ const customerSchema = new mongoose.Schema({
     name: String,
     productIds: [String],
     createdAt: { type: Date, default: Date.now }
-  }]
+  }],
+  apartment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Apartment"
+  },
+  apartmentUnit: {
+    type: String, // e.g., "A-101", "B-205"
+    default: ""
+  },
+  enrolledInBulkOrdering: {
+    type: Boolean,
+    default: false
+  },
+  preferredBulkOrderWindow: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "BulkOrderWindow"
+  }
 }, {
   timestamps: true
 });

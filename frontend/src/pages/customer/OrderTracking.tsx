@@ -47,22 +47,22 @@ const OrderTracking = () => {
   }, [orderId]);
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center py-20 gap-3">
-      <Loader2 className="w-8 h-8 text-primary animate-spin" />
-      <p className="text-sm text-muted-foreground">Fetching order status...</p>
+    <div className="flex flex-col items-center justify-center py-24 gap-4">
+      <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      <p className="text-base text-muted-foreground font-heading font-semibold">Fetching order status...</p>
     </div>
   );
 
   if (error || !order) {
     return (
-      <div className="animate-fade-in text-center py-20 px-6">
-        <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <AlertCircle className="w-8 h-8 text-destructive" />
+      <div className="animate-fade-in text-center py-24 px-6 bg-gradient-to-b from-background to-secondary/20 min-h-screen">
+        <div className="w-20 h-20 bg-destructive/15 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+          <AlertCircle className="w-10 h-10 text-destructive" />
         </div>
-        <h2 className="text-xl font-bold mb-2">{error || 'Order Not Found'}</h2>
-        <p className="text-sm text-muted-foreground mb-6">We couldn't find the order you're looking for.</p>
+        <h2 className="text-2xl font-heading font-bold mb-2 text-foreground">{error || 'Order Not Found'}</h2>
+        <p className="text-base text-muted-foreground mb-8 font-body">We couldn't find the order you're looking for.</p>
         <button onClick={() => navigate('/customer/home')}
-          className="px-6 py-3 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20">
+          className="px-8 py-3.5 bg-gradient-to-r from-primary to-primary/80 text-white rounded-xl text-base font-bold shadow-lg shadow-primary/40 hover:shadow-xl transition-all">
           Back to Shopping
         </button>
       </div>
@@ -73,19 +73,19 @@ const OrderTracking = () => {
   const isDelivered = order.status === 'Delivered';
 
   return (
-    <div className="animate-fade-in max-w-lg mx-auto pb-10">
-      <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4 animate-pulse-soft">
-          <CheckCircle2 className="w-10 h-10 text-primary" />
+    <div className="animate-fade-in max-w-lg mx-auto pb-12 px-4 bg-gradient-to-b from-background to-secondary/20 min-h-screen py-6">
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/15 mb-4 animate-pulse-soft shadow-lg shadow-primary/20">
+          <CheckCircle2 className="w-12 h-12 text-primary" />
         </div>
-        <h2 className="text-2xl font-heading font-bold text-foreground">Order #{order._id?.slice(-6).toUpperCase() || 'TRACKING'}</h2>
-        <p className="text-sm text-muted-foreground">
-          {order.shopDetails?.shopName || 'Kirana Store'} · {new Date(order.createdAt).toLocaleString()}
+        <h2 className="text-3xl font-heading font-bold text-foreground mb-2">Order #{order._id?.slice(-6).toUpperCase() || 'TRACKING'}</h2>
+        <p className="text-base text-muted-foreground font-body">
+          {order.shopDetails?.shopName || 'Kirana Store'} · {new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
         </p>
       </div>
 
       {/* Progress Bar */}
-      <div className="kc-card p-6 mb-4">
+      <div className="kc-card p-7 mb-6 border-2 border-secondary rounded-2xl">
         <div className="space-y-6">
           {steps.map((step, idx) => {
             const done = idx <= currentIdx;
@@ -93,28 +93,28 @@ const OrderTracking = () => {
             return (
               <div key={step.status} className="flex items-start gap-4">
                 <div className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-500 ${done ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-110' : 'bg-muted text-muted-foreground'
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-500 font-bold ${done ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/40 scale-110' : 'bg-secondary text-muted-foreground'
                     } ${active ? 'ring-4 ring-primary/20' : ''}`}>
-                    <step.icon className={`w-5 h-5 ${active ? 'animate-bounce' : ''}`} />
+                    <step.icon className={`w-6 h-6 ${active ? 'animate-bounce' : ''}`} />
                   </div>
                   {idx < steps.length - 1 && (
-                    <div className={`w-1 h-8 rounded-full transition-all duration-1000 ${idx < currentIdx ? 'bg-primary' : 'bg-muted'}`} />
+                    <div className={`w-1.5 h-9 rounded-full transition-all duration-1000 ${idx < currentIdx ? 'bg-primary' : 'bg-secondary'}`} />
                   )}
                 </div>
-                <div className="pt-1.5 flex-1">
+                <div className="pt-2 flex-1">
                   <div className="flex justify-between items-center">
-                    <p className={`text-sm font-bold ${done ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    <p className={`text-base font-heading font-bold ${done ? 'text-foreground' : 'text-muted-foreground'}`}>
                       {step.label}
                     </p>
-                    {active && <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full animate-pulse">Live</span>}
+                    {active && <span className="text-xs font-heading font-bold uppercase tracking-widest bg-primary/20 text-primary px-3 py-1 rounded-full animate-pulse">Live</span>}
                   </div>
-                  {active && <p className="text-xs text-muted-foreground mt-0.5">Your order is currently at this stage</p>}
+                  {active && <p className="text-sm text-muted-foreground mt-1 font-body">Your order is currently at this stage</p>}
 
                   {/* Show agent name when assigned */}
                   {step.status === 'Out for Delivery' && done && order.deliveryAgentName && (
-                    <div className="mt-2 flex items-center gap-2 bg-blue-50 p-2 rounded-lg border border-blue-100">
-                      <Truck className="w-3.5 h-3.5 text-blue-600" />
-                      <p className="text-xs text-blue-700 font-bold">Delivery by: {order.deliveryAgentName}</p>
+                    <div className="mt-3 flex items-center gap-2 bg-blue-50 p-3 rounded-lg border-2 border-blue-200 shadow-sm">
+                      <Truck className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                      <p className="text-sm text-blue-700 font-heading font-bold">Delivery by: {order.deliveryAgentName}</p>
                     </div>
                   )}
                 </div>
@@ -126,77 +126,77 @@ const OrderTracking = () => {
 
       {/* Delivery Confirmation */}
       {isDelivered && !confirmed && (
-        <div className="kc-card p-6 mb-4 text-center border-primary border-2 shadow-xl shadow-primary/5">
-          <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-3" />
-          <h3 className="text-lg font-heading font-bold text-foreground mb-1">Delivered!</h3>
-          <p className="text-sm text-muted-foreground mb-4">Was your delivery successful?</p>
+        <div className="kc-card p-7 mb-6 text-center border-2 border-primary/40 bg-primary/5 rounded-2xl shadow-lg shadow-primary/20">
+          <CheckCircle2 className="w-16 h-16 text-primary mx-auto mb-4" />
+          <h3 className="text-2xl font-heading font-bold text-foreground mb-2">Delivered!</h3>
+          <p className="text-base text-muted-foreground mb-6 font-body">Was your delivery successful?</p>
           <button onClick={() => setConfirmed(true)}
-            className="w-full bg-primary text-primary-foreground py-3.5 rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-95 transition-all">
+            className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground py-4 rounded-xl font-heading font-bold text-lg shadow-lg shadow-primary/40 hover:shadow-xl transition-all">
             Confirm Happy Delivery
           </button>
         </div>
       )}
 
       {confirmed && (
-        <div className="kc-card p-4 mb-4 text-center bg-green-50 border-green-100">
-          <p className="text-sm text-green-700 font-bold flex items-center justify-center gap-2">
-            <CheckCircle2 className="w-4 h-4" /> Thank you for confirming!
+        <div className="kc-card p-4 mb-6 text-center bg-green-50 border-2 border-green-200 rounded-xl">
+          <p className="text-base text-green-700 font-heading font-bold flex items-center justify-center gap-2">
+            <CheckCircle2 className="w-5 h-5" /> Thank you for confirming!
           </p>
         </div>
       )}
 
       {/* Digital Receipt */}
       {isDelivered && (
-        <div className="kc-card p-6 mb-4">
-          <h3 className="font-heading font-bold text-foreground text-sm mb-4 flex items-center gap-2 border-b pb-2">
-            <Receipt className="w-4 h-4 text-primary" /> Digital Receipt
+        <div className="kc-card p-7 mb-6 border-2 border-secondary rounded-2xl">
+          <h3 className="font-heading font-bold text-foreground text-lg mb-5 flex items-center gap-3 pb-3 border-b-2 border-secondary">
+            <Receipt className="w-5 h-5 text-primary" /> Digital Receipt
           </h3>
-          <div className="text-xs text-muted-foreground space-y-1 mb-4">
-            <p className="flex justify-between"><span>Order ID</span> <span className="font-bold text-foreground">#{order._id}</span></p>
-            <p className="flex justify-between"><span>Date</span> <span className="font-bold text-foreground">{new Date(order.createdAt).toLocaleString()}</span></p>
-            <p className="flex justify-between"><span>Store</span> <span className="font-bold text-foreground">{order.shopDetails?.shopName}</span></p>
+          <div className="text-sm text-muted-foreground space-y-2 mb-4 font-body">
+            <p className="flex justify-between"><span className="font-semibold">Order ID</span> <span className="font-heading font-bold text-foreground">#{order._id}</span></p>
+            <p className="flex justify-between"><span className="font-semibold">Date</span> <span className="font-heading font-bold text-foreground">{new Date(order.createdAt).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}</span></p>
+            <p className="flex justify-between"><span className="font-semibold">Store</span> <span className="font-heading font-bold text-foreground">{order.shopDetails?.shopName}</span></p>
           </div>
-          <div className="space-y-2 mb-4">
+          <div className="space-y-2 mb-4 font-body">
             {order.items.map((item: any, i: number) => (
-              <div key={i} className="flex justify-between text-sm py-0.5 text-foreground">
-                <span>{item.product?.name || item.name} <span className="text-muted-foreground">× {item.quantity}</span></span>
-                <span className="font-bold">₹{(item.product?.price || item.price) * item.quantity}</span>
+              <div key={i} className="flex justify-between text-sm py-1.5 text-foreground">
+                <span className="font-semibold">{item.product?.name || item.name} <span className="text-muted-foreground text-xs">× {item.quantity}</span></span>
+                <span className="font-heading font-bold">₹{((item.product?.price || item.price) * item.quantity).toFixed(2)}</span>
               </div>
             ))}
           </div>
-          <div className="flex justify-between text-sm py-2 text-muted-foreground border-t border-dashed">
-            <span>Delivery Fee</span><span>₹25</span>
+          <div className="flex justify-between text-sm py-3 text-muted-foreground border-t-2 border-dashed border-secondary font-body">
+            <span className="font-semibold">Delivery Fee</span><span className="font-heading font-bold">₹25</span>
           </div>
-          <div className="flex justify-between items-center border-t pt-3 mt-1">
-            <span className="font-bold text-foreground">Total Paid</span>
-            <span className="text-xl font-bold text-primary">₹{order.totalPrice}</span>
+          <div className="flex justify-between items-center border-t-2 border-secondary pt-4 mt-2">
+            <span className="font-heading font-bold text-lg text-foreground">Total Paid</span>
+            <span className="text-2xl font-heading font-bold text-primary">₹{order.totalPrice.toFixed(2)}</span>
           </div>
         </div>
       )}
 
       {/* Order Items (non-delivered) */}
       {!isDelivered && (
-        <div className="kc-card p-6 mb-4">
-          <h3 className="font-heading font-bold text-foreground text-sm mb-4 flex items-center gap-2 border-b pb-2">
-            Summary
+        <div className="kc-card p-7 mb-6 border-2 border-secondary rounded-2xl">
+          <h3 className="font-heading font-bold text-foreground text-lg mb-5 pb-3 border-b-2 border-secondary">
+            Order Summary
           </h3>
-          <div className="space-y-2 mb-4">
+          <div className="space-y-2 mb-4 font-body">
             {order.items.map((item: any, i: number) => (
-              <div key={i} className="flex justify-between text-sm py-1 text-foreground">
-                <span>{item.product?.name || item.name} <span className="text-muted-foreground">× {item.quantity}</span></span>
-                <span className="font-bold">₹{(item.product?.price || item.price) * item.quantity}</span>
+              <div key={i} className="flex justify-between text-sm py-1.5 text-foreground">
+                <span className="font-semibold">{item.product?.name || item.name} <span className="text-muted-foreground text-xs">× {item.quantity}</span></span>
+                <span className="font-heading font-bold">₹{((item.product?.price || item.price) * item.quantity).toFixed(2)}</span>
               </div>
             ))}
           </div>
-          <div className="flex justify-between items-center border-t pt-3 mt-1">
-            <span className="font-heading font-bold text-foreground">Grand Total</span>
-            <span className="text-xl font-heading font-bold text-primary">₹{order.totalPrice}</span>
+          <div className="flex justify-between items-center border-t-2 border-secondary pt-4 mt-2">
+            <span className="font-heading font-bold text-lg text-foreground">Grand Total</span>
+            <span className="text-2xl font-heading font-bold text-primary">₹{order.totalPrice.toFixed(2)}</span>
           </div>
         </div>
       )}
 
       <button onClick={() => navigate('/customer/home')}
-        className="w-full h-14 bg-accent text-accent-foreground rounded-2xl font-bold hover:bg-accent/80 transition-all text-sm border border-input">
+        className="w-full h-14 bg-primary/15 text-primary rounded-xl font-heading font-bold hover:bg-primary/25 transition-all text-lg border-2 border-primary/30">
         Continue Shopping
       </button>
     </div>

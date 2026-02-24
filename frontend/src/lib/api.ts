@@ -446,6 +446,134 @@ export const api = {
             if (!res.ok) throw new Error('Failed to fetch reports');
             return res.json();
         },
+    },
+
+    // ============ BULK ORDERS ============
+    bulkOrders: {
+        getApartments: async () => {
+            const res = await fetch(`${API_URL}/bulk-orders/apartments`);
+            if (!res.ok) throw new Error('Failed to fetch apartments');
+            return res.json();
+        },
+
+        getApartmentDetail: async (apartmentId: string) => {
+            const res = await fetch(`${API_URL}/bulk-orders/apartments/${apartmentId}`);
+            if (!res.ok) throw new Error('Failed to fetch apartment');
+            return res.json();
+        },
+
+        updateCustomerApartment: async (customerId: string, apartmentId: string, apartmentUnit: string) => {
+            const res = await fetch(`${API_URL}/bulk-orders/customer/apartment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId, apartmentId, apartmentUnit }),
+            });
+            if (!res.ok) throw new Error('Failed to update apartment profile');
+            return res.json();
+        },
+
+        joinOrder: async (customerId: string, apartmentId: string, orderId: string, items: any[], totalAmount: number, shopId: string) => {
+            const res = await fetch(`${API_URL}/bulk-orders/bulk-orders/join`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customerId, apartmentId, orderId, items, totalAmount, shopId }),
+            });
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || 'Failed to join bulk order');
+            }
+            return res.json();
+        },
+
+        getCurrentOrder: async (customerId: string) => {
+            const res = await fetch(`${API_URL}/bulk-orders/current/${customerId}`);
+            if (!res.ok) throw new Error('Failed to fetch current bulk order');
+            return res.json();
+        },
+
+        getShopkeeperBulkOrders: async (shopId: string) => {
+            const res = await fetch(`${API_URL}/bulk-orders/shopkeeper/bulk-orders/${shopId}`);
+            if (!res.ok) throw new Error('Failed to fetch bulk orders');
+            return res.json();
+        },
+
+        updateBulkOrderStatus: async (bulkOrderId: string, status: string) => {
+            const res = await fetch(`${API_URL}/bulk-orders/bulk-orders/${bulkOrderId}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status }),
+            });
+            if (!res.ok) throw new Error('Failed to update bulk order status');
+            return res.json();
+        },
+
+        getDeliveryAgentBulk: async (agentId: string) => {
+            const res = await fetch(`${API_URL}/bulk-orders/delivery-agent/bulk-deliveries/${agentId}`);
+            if (!res.ok) throw new Error('Failed to fetch bulk deliveries');
+            return res.json();
+        },
+
+        assignDeliveryAgent: async (bulkOrderId: string, agentId: string) => {
+            const res = await fetch(`${API_URL}/bulk-orders/bulk-orders/${bulkOrderId}/assign-agent`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ agentId }),
+            });
+            if (!res.ok) throw new Error('Failed to assign delivery agent');
+            return res.json();
+        },
+
+        markBulkDelivered: async (bulkOrderId: string) => {
+            const res = await fetch(`${API_URL}/bulk-orders/bulk-orders/${bulkOrderId}/delivered`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+            });
+            if (!res.ok) throw new Error('Failed to mark delivery complete');
+            return res.json();
+        },
+
+        // Admin endpoints
+        createApartment: async (data: any) => {
+            const res = await fetch(`${API_URL}/bulk-orders/admin/apartments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error('Failed to create apartment');
+            return res.json();
+        },
+
+        getAllApartments: async () => {
+            const res = await fetch(`${API_URL}/bulk-orders/admin/apartments`);
+            if (!res.ok) throw new Error('Failed to fetch apartments');
+            return res.json();
+        },
+
+        updateApartment: async (apartmentId: string, data: any) => {
+            const res = await fetch(`${API_URL}/bulk-orders/admin/apartments/${apartmentId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error('Failed to update apartment');
+            return res.json();
+        },
+
+        createOrderWindow: async (data: any) => {
+            const res = await fetch(`${API_URL}/bulk-orders/admin/order-windows`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+            if (!res.ok) throw new Error('Failed to create order window');
+            return res.json();
+        },
+
+        getStatistics: async () => {
+            const res = await fetch(`${API_URL}/bulk-orders/admin/statistics`);
+            if (!res.ok) throw new Error('Failed to fetch statistics');
+            return res.json();
+        },
     }
 };
 

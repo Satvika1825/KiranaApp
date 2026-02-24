@@ -203,6 +203,12 @@ const DeliveryDashboard = () => {
                     </div>
                     <div className="flex items-center gap-2">
                         <button
+                            onClick={() => navigate('/delivery/bulk-deliveries')}
+                            className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-xl text-blue-600 font-bold text-sm hover:bg-blue-100 transition-colors"
+                        >
+                            Bulk Orders
+                        </button>
+                        <button
                             onClick={() => fetchOrders(agent.id, true)}
                             className="w-10 h-10 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-center"
                         >
